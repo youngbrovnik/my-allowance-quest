@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Quest from "./Quest";
+import "./App.css";
 
 function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setEarned }) {
   const [questName, setQuestName] = useState("");
@@ -18,6 +19,12 @@ function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setE
     updateQuests([...quests, newQuest]);
     setQuestName("");
     setQuestFrequency(1);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      addQuest();
+    }
   };
 
   const toggleComplete = (index) => {
@@ -58,11 +65,18 @@ function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setE
         ))}
       </ul>
       <div className="add-quest">
-        <input type="text" value={questName} onChange={(e) => setQuestName(e.target.value)} placeholder="Quest Name" />
+        <input
+          type="text"
+          value={questName}
+          onChange={(e) => setQuestName(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Quest Name"
+        />
         <input
           type="number"
           value={questFrequency}
           onChange={(e) => setQuestFrequency(Number(e.target.value))}
+          onKeyDown={handleKeyDown}
           min="1"
           max={daysInMonth}
         />

@@ -16,6 +16,12 @@ function Allowance({ allowance, updateAllowance }) {
     setIsEditing(!isEditing);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleButtonClick();
+    }
+  };
+
   return (
     <div className="allowance-container">
       <h2>
@@ -25,6 +31,7 @@ function Allowance({ allowance, updateAllowance }) {
             type="number"
             value={inputValue}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             className="allowance-input"
             placeholder="Enter your allowance"
           />
