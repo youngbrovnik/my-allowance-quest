@@ -2,23 +2,22 @@ import React from "react";
 
 function Quest({ index, quest, toggleComplete, removeQuest }) {
   return (
-    <li
-      style={{ textDecoration: quest.completed ? "line-through" : "none", color: quest.completed ? "gray" : "black" }}
-    >
-      <input type="checkbox" checked={quest.completed} onChange={() => toggleComplete(index)} />
-      <span>
-        {quest.name} - {quest.frequency} times/week
-      </span>
-      <span>
-        {" "}
-        (Completed: {quest.completedTimes}/{quest.frequency})
+    <li style={{ display: "flex", alignItems: "center", color: "white" }}>
+      <input
+        type="checkbox"
+        checked={quest.completed}
+        onChange={() => toggleComplete(index)}
+        style={{ marginRight: "10px" }}
+      />
+      <span style={{ textDecoration: quest.completed ? "line-through" : "none", flexGrow: 1 }}>
+        {quest.name} - {quest.frequency} times/month (Completed: {quest.completedTimes}/{quest.frequency})
       </span>
       <button
         onClick={() => removeQuest(index)}
         style={{
           marginLeft: "10px",
-          backgroundColor: "red",
-          color: "white",
+          backgroundColor: "white",
+          color: "black",
           border: "none",
           borderRadius: "4px",
           cursor: "pointer",

@@ -4,28 +4,18 @@ import Allowance from "./Allowance";
 import QuestList from "./QuestList";
 
 function App() {
-  const [allowance, setAllowance] = useState(0);
-  const [quests, setQuests] = useState([]);
-  const [earned, setEarned] = useState(0);
-
-  useEffect(() => {
+  const [allowance, setAllowance] = useState(() => {
     const savedAllowance = localStorage.getItem("allowance");
+    return savedAllowance ? JSON.parse(savedAllowance) : 0;
+  });
+  const [quests, setQuests] = useState(() => {
     const savedQuests = localStorage.getItem("quests");
+    return savedQuests ? JSON.parse(savedQuests) : [];
+  });
+  const [earned, setEarned] = useState(() => {
     const savedEarned = localStorage.getItem("earned");
-
-    if (savedAllowance) {
-      setAllowance(JSON.parse(savedAllowance));
-      console.log("Loaded allowance from localStorage:", JSON.parse(savedAllowance));
-    }
-    if (savedQuests) {
-      setQuests(JSON.parse(savedQuests));
-      console.log("Loaded quests from localStorage:", JSON.parse(savedQuests));
-    }
-    if (savedEarned) {
-      setEarned(JSON.parse(savedEarned));
-      console.log("Loaded earned from localStorage:", JSON.parse(savedEarned));
-    }
-  }, []);
+    return savedEarned ? JSON.parse(savedEarned) : 0;
+  });
 
   useEffect(() => {
     localStorage.setItem("allowance", JSON.stringify(allowance));
@@ -67,6 +57,7 @@ function App() {
         allowance={allowance}
         updateEarned={updateEarned}
         earned={earned}
+        setEarned={setEarned}
       />
       <p>Total Earned: {earned}</p>
     </div>
