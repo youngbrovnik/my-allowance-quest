@@ -16,6 +16,10 @@ function App() {
     const savedEarned = localStorage.getItem("earned");
     return savedEarned ? JSON.parse(savedEarned) : 0;
   });
+  const [lastUpdated, setLastUpdated] = useState(() => {
+    const savedLastUpdated = localStorage.getItem("lastUpdated");
+    return savedLastUpdated ? new Date(savedLastUpdated) : new Date();
+  });
 
   useEffect(() => {
     localStorage.setItem("allowance", JSON.stringify(allowance));
@@ -31,6 +35,26 @@ function App() {
     localStorage.setItem("earned", JSON.stringify(earned));
     console.log("Saved earned to localStorage:", earned);
   }, [earned]);
+
+  useEffect(() => {
+    localStorage.setItem("lastUpdated", lastUpdated.toISOString());
+    console.log("Saved lastUpdated to localStorage:", lastUpdated);
+  }, [lastUpdated]);
+
+  useEffect(() => {
+    const now = new Date();
+    if (now.getMonth() !== lastUpdated.getMonth()) {
+      setEarned(0);
+      setQuests(
+        quests.map((quest) => ({
+          ...quest,
+          completed: false,
+          completedTimes: 0,
+        }))
+      );
+      setLastUpdated(new Date());
+    }
+  }, [lastUpdated, quests]);
 
   const updateAllowance = (newAllowance) => {
     setAllowance(newAllowance);
@@ -51,6 +75,7 @@ function App() {
     <div className="App">
       <header className="App-header">My Allowance Quest</header>
       <Allowance allowance={allowance} updateAllowance={updateAllowance} />
+      <h2>Total Earned: {earned.toLocaleString()}</h2>
       <QuestList
         quests={quests}
         updateQuests={updateQuests}
@@ -59,7 +84,6 @@ function App() {
         earned={earned}
         setEarned={setEarned}
       />
-      <p>Total Earned: {earned}</p>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Quest from "./Quest";
 
 function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setEarned }) {
@@ -12,22 +12,6 @@ function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setE
 
   // 현재 달의 총 일수
   const daysInMonth = getDaysInMonth(new Date().getFullYear(), new Date().getMonth());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      if (now.getDate() === 1 && now.getHours() === 0 && now.getMinutes() === 0) {
-        const resetQuests = quests.map((quest) => ({
-          ...quest,
-          completed: false,
-          completedTimes: 0,
-        }));
-        updateQuests(resetQuests);
-      }
-    }, 60000); // 매 분마다 체크
-
-    return () => clearInterval(interval);
-  }, [quests, updateQuests]);
 
   const addQuest = () => {
     const newQuest = { name: questName, frequency: Number(questFrequency), completed: false, completedTimes: 0 };
@@ -68,20 +52,22 @@ function QuestList({ quests, updateQuests, allowance, updateEarned, earned, setE
   return (
     <div className="quest-list">
       <h2>Quest List</h2>
-      <input type="text" value={questName} onChange={(e) => setQuestName(e.target.value)} placeholder="Quest Name" />
-      <input
-        type="number"
-        value={questFrequency}
-        onChange={(e) => setQuestFrequency(Number(e.target.value))}
-        min="1"
-        max={daysInMonth}
-      />
-      <button onClick={addQuest}>Add Quest</button>
       <ul>
         {quests.map((quest, index) => (
           <Quest key={index} index={index} quest={quest} toggleComplete={toggleComplete} removeQuest={removeQuest} />
         ))}
       </ul>
+      <div className="add-quest">
+        <input type="text" value={questName} onChange={(e) => setQuestName(e.target.value)} placeholder="Quest Name" />
+        <input
+          type="number"
+          value={questFrequency}
+          onChange={(e) => setQuestFrequency(Number(e.target.value))}
+          min="1"
+          max={daysInMonth}
+        />
+        <button onClick={addQuest}>Add Quest</button>
+      </div>
     </div>
   );
 }
