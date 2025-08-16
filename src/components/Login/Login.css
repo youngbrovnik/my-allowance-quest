@@ -3,7 +3,7 @@
   padding: 0;
   margin: 0;
   text-align: center;
-  color: white;
+  color: var(--text-primary);
   max-width: none;
   width: auto;
   backdrop-filter: none;
@@ -62,7 +62,7 @@
   align-items: center;
   justify-content: center;
   font-family: "Arial", sans-serif;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px var(--shadow-primary);
 }
 
 .divider {
@@ -76,13 +76,13 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, var(--border-secondary), transparent);
 }
 
 .divider span {
-  background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   padding: 0 20px;
-  color: #9e9e9e;
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -94,41 +94,41 @@
 .login-form input {
   padding: 14px 18px;
   font-size: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-secondary);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  backdrop-filter: blur(10px);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  backdrop-filter: var(--backdrop-blur-light);
   transition: all 0.3s ease;
 }
 
 .login-form input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
-  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px var(--shadow-secondary);
+  background: var(--bg-input);
 }
 
 .login-form input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .submit-btn {
   padding: 14px 28px;
   font-size: 1rem;
-  background: linear-gradient(45deg, #667eea, #764ba2);
+  background: var(--bg-button);
   color: white;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 600;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px var(--shadow-secondary);
 }
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px var(--shadow-secondary);
 }
 
 .submit-btn:disabled {
@@ -144,7 +144,7 @@
 
 .toggle-btn:hover {
   color: #764ba2;
-  text-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+  text-shadow: 0 0 8px var(--shadow-secondary);
 }
 
 .error-message {
@@ -161,7 +161,7 @@
 .user-info p {
   margin: 0;
   font-size: 0.9rem;
-  color: #ffffff;
+  color: var(--text-primary);
   font-weight: 500;
 }
 

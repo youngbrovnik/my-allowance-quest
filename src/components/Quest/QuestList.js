@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Quest from "./Quest";
-import { calculateQuestEarnedAmount } from "../../utils/questCalculations";
 import "./Quest.css";
 
 function QuestList({ quests, addQuest, removeQuest, toggleComplete, allowance }) {

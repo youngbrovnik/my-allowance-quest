@@ -39,5 +39,8 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://youngbrovnik.github.io/my-allowance-quest/"
+  "homepage": "https://youngbrovnik.github.io/my-allowance-quest/",
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+  }
 }

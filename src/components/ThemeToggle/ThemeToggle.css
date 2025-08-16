@@ -1,0 +1,51 @@
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-primary);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px var(--shadow-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px var(--shadow-primary);
+  background: var(--bg-secondary);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(15deg);
+}
+
+/* 다크 테마일 때 태양 아이콘 색상 */
+[data-theme="dark"] .theme-toggle svg {
+  color: #ffd700;
+}
+
+/* 라이트 테마일 때 달 아이콘 색상 */
+[data-theme="light"] .theme-toggle svg {
+  color: #667eea;
+}

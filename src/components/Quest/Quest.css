@@ -1,19 +1,19 @@
 .quest-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.05) 100%);
   border-radius: 16px;
   padding: 24px;
   margin: 20px 0;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--shadow-primary);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--border-primary);
 }
 
 .quest-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 40px var(--shadow-primary);
   border-color: rgba(102, 126, 234, 0.3);
 }
 
@@ -37,8 +37,8 @@
   margin: 0 0 12px 0;
   font-size: 1.3rem;
   font-weight: 600;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: var(--text-primary);
+  text-shadow: 0 2px 4px var(--shadow-primary);
 }
 
 .quest-meta {
@@ -60,9 +60,9 @@
   background: rgba(255, 215, 0, 0.2);
   padding: 6px 12px;
   border-radius: 8px;
-  color: #ffd700;
+  color: var(--text-accent);
   font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px var(--shadow-primary);
   border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
@@ -129,19 +129,19 @@
 .progress-bar {
   width: 100%;
   height: 10px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-input);
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-primary);
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ffd700, #ffed4e);
+  background: linear-gradient(90deg, var(--text-accent), #ffed4e);
   border-radius: 6px;
   transition: width 0.5s ease;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 10px var(--shadow-accent);
 }
 
 .progress-text {
@@ -149,17 +149,17 @@
   align-items: center;
   gap: 6px;
   font-size: 0.95rem;
-  color: #e0e0e0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: var(--text-secondary);
+  text-shadow: 0 1px 2px var(--shadow-primary);
 }
 
 .completed-times {
   font-weight: 600;
-  color: #ffd700;
+  color: var(--text-accent);
 }
 
 .separator {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
 }
 
 .total-times {
@@ -167,7 +167,7 @@
 }
 
 .progress-percentage {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
@@ -175,14 +175,14 @@
   position: absolute;
   top: 15px;
   right: 15px;
-  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  background: linear-gradient(45deg, var(--text-accent), #ffed4e);
   color: #333;
   padding: 6px 12px;
   border-radius: 16px;
   font-size: 0.85rem;
   font-weight: 600;
   animation: bounce 0.8s ease;
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 15px var(--shadow-accent);
 }
 
 @keyframes bounce {

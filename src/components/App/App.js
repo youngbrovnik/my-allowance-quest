@@ -3,17 +3,20 @@ import { auth } from "../../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { saveUserData, loadUserData } from "../../services/firestoreService";
 import { useQuestManager } from "../../hooks/useQuestManager";
+import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
 import "./App.css";
 import Login from "../Login/Login";
 import Allowance from "../Allowance/Allowance";
 import QuestList from "../Quest/QuestList";
+import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [allowance, setAllowance] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const { theme } = useTheme();
 
   // 사용자 데이터를 Firestore에 저장
   const saveDataToFirestore = useCallback(
@@ -99,14 +102,15 @@ function App() {
 
   if (loading) {
     return (
-      <div className="App">
+      <div className="App" data-theme={theme}>
         <div className="loading">로딩 중...</div>
       </div>
     );
   }
 
   return (
-    <div className="App">
+    <div className="App" data-theme={theme}>
+      <ThemeToggle />
       <header className="App-header">
         <div className="header-content">
           <h1 className="header-title">My Allowance Quest</h1>
@@ -134,6 +138,14 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 
