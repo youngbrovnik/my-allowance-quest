@@ -1,70 +1,131 @@
-# Getting Started with Create React App
+# My Allowance Quest
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+용돈을 목표로 하는 퀘스트(과제) 시스템을 통해 동기부여를 주는 React 웹 애플리케이션입니다.
 
-## Available Scripts
+## 주요 기능
 
-In the project directory, you can run:
+- 🔐 **Google 로그인**: 구글 계정으로 간편하게 로그인
+- 💰 **용돈 관리**: 월별 용돈 설정 및 편집
+- 🎯 **퀘스트 시스템**: 개인 목표를 퀘스트로 등록하고 진행 상황 추적
+- ☁️ **클라우드 동기화**: Firestore를 통한 데이터 저장으로 여러 기기에서 동기화
+- 📱 **반응형 디자인**: 모바일과 데스크톱에서 모두 사용 가능
 
-### `npm start`
+## 기술 스택
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- React 18.3.1
+- Firebase Authentication (Google 로그인)
+- Firestore Database
+- Create React App
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 설치 및 실행
 
-### `npm test`
+### 1. 의존성 설치
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+### 2. Firebase 설정
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### Firebase 프로젝트 생성
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
+2. Authentication에서 Google 로그인 활성화:
+   - Sign-in method > Google에서 활성화
+   - 프로젝트 지원 이메일 설정
+   - 승인된 도메인에 localhost 추가 (개발용)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### Google 로그인 설정
 
-### `npm run eject`
+1. Authentication > Sign-in method > Google에서 활성화
+2. 프로젝트 지원 이메일 설정
+3. 승인된 도메인에 localhost 추가 (개발용)
+4. OAuth 2.0 클라이언트 ID 생성
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#### 환경 변수 설정
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+프로젝트 루트에 `.env` 파일을 생성하고 Firebase 설정을 추가:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```env
+REACT_APP_FIREBASE_API_KEY=your-api-key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+REACT_APP_FIREBASE_APP_ID=your-app-id
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 3. 개발 서버 실행
 
-## Learn More
+```bash
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 4. 프로덕션 빌드
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+npm run build
+```
 
-### Code Splitting
+### 5. 배포
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm run deploy
+```
 
-### Analyzing the Bundle Size
+## 사용 방법
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+1. **Google 로그인**: 구글 계정으로 간편하게 로그인
+2. **용돈 설정**: 월별 용돈 금액 설정
+3. **퀘스트 등록**: 달성하고 싶은 목표를 퀘스트로 등록
+4. **진행 추적**: 퀘스트 완료 시마다 보상 획득
+5. **데이터 동기화**: 다른 기기에서 로그인해도 최신 데이터 확인 가능
 
-### Making a Progressive Web App
+## 로그인 방식
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Google 로그인
 
-### Advanced Configuration
+- 구글 계정으로 간편 로그인
+- 별도 회원가입 과정 없이 바로 사용 가능
+- 기존 구글 계정과 연동
+- 보안성이 높고 사용자 편의성 우수
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Firestore 보안 규칙
 
-### Deployment
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 프로젝트 구조
 
-### `npm run build` fails to minify
+```
+src/
+├── components/
+│   ├── Login.js          # Google 로그인 컴포넌트
+│   └── Login.css         # 로그인 스타일
+├── services/
+│   └── firestoreService.js # Firestore 데이터 관리 서비스
+├── firebase.js           # Firebase 설정
+├── App.js               # 메인 앱 컴포넌트
+├── Allowance.js         # 용돈 관리 컴포넌트
+├── Quest.js             # 개별 퀘스트 컴포넌트
+├── QuestList.js         # 퀘스트 목록 관리
+└── App.css              # 메인 스타일
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 배포
+
+GitHub Pages를 통해 자동 배포됩니다:
+
+- **URL**: https://youngbrovnik.github.io/my-allowance-quest/
+
+## 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.

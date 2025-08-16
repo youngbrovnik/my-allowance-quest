@@ -13,6 +13,23 @@
   margin-bottom: 20px;
 }
 
+.loading {
+  font-size: 1.5rem;
+  color: white;
+  text-align: center;
+}
+
+.login-prompt {
+  text-align: center;
+  color: white;
+  margin: 20px 0;
+}
+
+.login-prompt p {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
 .allowance-container {
   display: flex;
   align-items: center;
