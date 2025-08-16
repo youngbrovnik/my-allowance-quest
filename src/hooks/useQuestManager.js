@@ -10,7 +10,7 @@ import {
 /**
  * 퀘스트 관리를 위한 커스텀 훅
  */
-export const useQuestManager = (allowance, saveDataToFirestore) => {
+export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHistory) => {
   const [quests, setQuests] = useState([]);
   const [earned, setEarned] = useState(0);
 
@@ -148,9 +148,42 @@ export const useQuestManager = (allowance, saveDataToFirestore) => {
   );
 
   /**
-   * 퀘스트 초기화 (월별 리셋 등)
+   * 퀘스트 초기화 (월별 리셋 등) - 히스토리 저장 포함
    */
-  const resetQuests = useCallback(() => {
+  const resetQuests = useCallback(async () => {
+    // 현재 달의 완료 기록을 히스토리로 저장
+    if (saveMonthlyHistory && quests.length > 0) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      // 이전 달의 데이터를 저장하므로 monthName도 이전 달로 설정
+      const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+      const monthHistory = {
+        month: previousMonth + 1, // 1-12 (사용자 친화적)
+        year: previousYear, // 2024
+        allowance: allowance,
+        quests: quests.map((quest) => ({
+          name: quest.name,
+          frequency: quest.frequency,
+          completedTimes: quest.completedTimes,
+          completed: quest.completed,
+          earnedPerCompletion: quest.earnedPerCompletion,
+        })),
+        totalEarned: earned,
+        completionRate: quests.filter((q) => q.completed).length / quests.length,
+        completedQuests: quests.filter((q) => q.completed).length,
+        totalQuests: quests.length,
+        // createdAt을 이전 달의 마지막 날로 설정 (데이터의 실제 의미)
+        createdAt: new Date(previousYear, previousMonth + 1, 0, 23, 59, 59).toISOString(),
+      };
+
+      await saveMonthlyHistory(monthHistory);
+    }
+
+    // 퀘스트 초기화
     const resetQuests = quests.map((quest) => ({
       ...quest,
       completed: false,
@@ -161,7 +194,7 @@ export const useQuestManager = (allowance, saveDataToFirestore) => {
     setEarned(0);
 
     return resetQuests;
-  }, [quests]);
+  }, [quests, allowance, earned, saveMonthlyHistory]);
 
   return {
     quests,
