@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { auth } from "../firebase";
-import { signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import React, { useState, useEffect } from "react";
+import { auth } from "../../config/firebase";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import "./Login.css";
 
 function Login({ onLogin, isLoggedIn, user }) {

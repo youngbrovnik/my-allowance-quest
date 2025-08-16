@@ -1,4 +1,4 @@
-import { db } from "../firebase";
+import { db } from "../config/firebase";
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
 
 // 사용자 데이터를 Firestore에 저장
@@ -9,7 +9,6 @@ export const saveUserData = async (userId, userData) => {
       ...userData,
       lastUpdated: new Date().toISOString(),
     });
-    console.log("사용자 데이터가 성공적으로 저장되었습니다.");
     return true;
   } catch (error) {
     console.error("사용자 데이터 저장 중 오류 발생:", error);
@@ -24,13 +23,9 @@ export const loadUserData = async (userId) => {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      const data = userSnap.data();
-      console.log("사용자 데이터를 성공적으로 불러왔습니다.");
-      return data;
-    } else {
-      console.log("사용자 데이터가 존재하지 않습니다.");
-      return null;
+      return userSnap.data();
     }
+    return null;
   } catch (error) {
     console.error("사용자 데이터 불러오기 중 오류 발생:", error);
     return null;
@@ -45,7 +40,6 @@ export const updateUserData = async (userId, updates) => {
       ...updates,
       lastUpdated: new Date().toISOString(),
     });
-    console.log("사용자 데이터가 성공적으로 업데이트되었습니다.");
     return true;
   } catch (error) {
     console.error("사용자 데이터 업데이트 중 오류 발생:", error);

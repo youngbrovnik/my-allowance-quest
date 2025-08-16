@@ -1,9 +1,14 @@
-import React, { useState } from "react";
-import "./App.css";
+import React, { useState, useEffect } from "react";
+import "./Allowance.css";
 
 function Allowance({ allowance, updateAllowance }) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(allowance);
+
+  // allowance prop이 변경될 때 inputValue 동기화
+  useEffect(() => {
+    setInputValue(allowance);
+  }, [allowance]);
 
   const handleChange = (e) => {
     setInputValue(Number(e.target.value));
