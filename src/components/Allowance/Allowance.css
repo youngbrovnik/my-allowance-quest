@@ -41,3 +41,54 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 15px var(--shadow-secondary);
 }
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+  .allowance-container {
+    margin: 15px;
+    padding: 15px;
+    max-width: 100%;
+  }
+
+  .allowance-form {
+    gap: 8px;
+  }
+
+  .allowance-input {
+    padding: 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .allowance-button {
+    padding: 8px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .allowance-container {
+    margin: 10px;
+    padding: 12px;
+  }
+
+  .allowance-input {
+    padding: 6px;
+    font-size: 13px;
+    min-width: 150px;
+  }
+
+  .allowance-button {
+    padding: 6px;
+    font-size: 13px;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .allowance-container {
+    margin: 25px;
+    padding: 25px;
+    max-width: 450px;
+  }
+}

@@ -1,5 +1,5 @@
 .quest-card {
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.03) 100%);
   border-radius: 16px;
   padding: 24px;
   margin: 20px 0;
@@ -14,7 +14,7 @@
 .quest-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px var(--shadow-primary);
-  border-color: rgba(102, 126, 234, 0.3);
+  border-color: var(--border-secondary);
 }
 
 .quest-card.completed {
@@ -48,22 +48,22 @@
 }
 
 .quest-frequency {
-  background: rgba(102, 126, 234, 0.2);
+  background: var(--bg-input);
   padding: 6px 12px;
   border-radius: 8px;
-  color: #667eea;
+  color: var(--text-secondary);
   font-weight: 500;
-  border: 1px solid rgba(102, 126, 234, 0.3);
+  border: 1px solid var(--border-secondary);
 }
 
 .quest-earned {
-  background: rgba(255, 215, 0, 0.2);
+  background: var(--bg-input);
   padding: 6px 12px;
   border-radius: 8px;
   color: var(--text-accent);
   font-weight: 600;
   text-shadow: 0 1px 2px var(--shadow-primary);
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  border: 1px solid var(--border-secondary);
 }
 
 .quest-actions {
@@ -138,7 +138,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--text-accent), #ffed4e);
+  background: linear-gradient(90deg, var(--text-accent), var(--text-secondary));
   border-radius: 6px;
   transition: width 0.5s ease;
   box-shadow: 0 0 10px var(--shadow-accent);
@@ -171,36 +171,6 @@
   font-size: 0.85rem;
 }
 
-.quest-completed-badge {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: linear-gradient(45deg, var(--text-accent), #ffed4e);
-  color: #333;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  animation: bounce 0.8s ease;
-  box-shadow: 0 4px 15px var(--shadow-accent);
-}
-
-@keyframes bounce {
-  0%,
-  20%,
-  50%,
-  80%,
-  100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-12px);
-  }
-  60% {
-    transform: translateY(-6px);
-  }
-}
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .quest-header {
@@ -220,5 +190,76 @@
   .quest-card {
     padding: 20px;
     margin: 15px 0;
+  }
+}
+
+/* 모바일 최적화 추가 */
+@media (max-width: 480px) {
+  .quest-card {
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+  }
+
+  .quest-name {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .quest-meta {
+    gap: 8px;
+  }
+
+  .quest-frequency,
+  .quest-earned {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  .quest-actions {
+    flex-direction: column;
+    gap: 8px;
+    align-self: stretch;
+  }
+
+  .complete-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.1rem;
+  }
+
+  .quest-progress {
+    margin-bottom: 15px;
+  }
+
+  .progress-bar {
+    height: 8px;
+    margin-bottom: 10px;
+  }
+
+  .progress-text {
+    font-size: 0.85rem;
+    gap: 4px;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .quest-card {
+    padding: 22px;
+    margin: 18px 0;
+  }
+
+  .quest-header {
+    gap: 25px;
+  }
+
+  .quest-meta {
+    gap: 20px;
   }
 }

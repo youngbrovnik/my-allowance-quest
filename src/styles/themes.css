@@ -1,24 +1,24 @@
 :root {
-  /* 다크 테마 (기본값) */
-  --bg-primary: #0f0f23;
-  --bg-secondary: #1a1a2e;
-  --bg-tertiary: #16213e;
+  /* 다크 테마 (기본값) - 모노톤 */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2a2a2a;
   --bg-card: rgba(255, 255, 255, 0.05);
-  --bg-input: rgba(255, 255, 255, 0.1);
-  --bg-button: linear-gradient(45deg, #667eea, #764ba2);
+  --bg-input: rgba(255, 255, 255, 0.08);
+  --bg-button: linear-gradient(45deg, #404040, #606060);
 
   --text-primary: #ffffff;
   --text-secondary: #e0e0e0;
-  --text-muted: #b8b8b8;
-  --text-accent: #ffd700;
+  --text-muted: #a0a0a0;
+  --text-accent: #ffffff;
 
   --border-primary: rgba(255, 255, 255, 0.1);
-  --border-secondary: rgba(255, 255, 255, 0.2);
-  --border-input: rgba(255, 255, 255, 0.4);
+  --border-secondary: rgba(255, 255, 255, 0.15);
+  --border-input: rgba(255, 255, 255, 0.2);
 
-  --shadow-primary: rgba(0, 0, 0, 0.3);
-  --shadow-secondary: rgba(102, 126, 234, 0.3);
-  --shadow-accent: rgba(255, 215, 0, 0.3);
+  --shadow-primary: rgba(0, 0, 0, 0.4);
+  --shadow-secondary: rgba(255, 255, 255, 0.1);
+  --shadow-accent: rgba(255, 255, 255, 0.2);
 
   --backdrop-blur: blur(20px);
   --backdrop-blur-light: blur(10px);
@@ -26,24 +26,24 @@
 
 [data-theme="light"] {
   --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #e9ecef;
-  --bg-card: rgba(0, 0, 0, 0.05);
-  --bg-input: rgba(0, 0, 0, 0.1);
-  --bg-button: linear-gradient(45deg, #667eea, #764ba2);
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e8e8e8;
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --bg-input: rgba(0, 0, 0, 0.06);
+  --bg-button: linear-gradient(45deg, #404040, #606060);
 
-  --text-primary: #212529;
-  --text-secondary: #495057;
-  --text-muted: #6c757d;
-  --text-accent: #ff6b35;
+  --text-primary: #1a1a1a;
+  --text-secondary: #404040;
+  --text-muted: #666666;
+  --text-accent: #1a1a1a;
 
-  --border-primary: rgba(0, 0, 0, 0.1);
-  --border-secondary: rgba(0, 0, 0, 0.2);
-  --border-input: rgba(0, 0, 0, 0.3);
+  --border-primary: rgba(0, 0, 0, 0.08);
+  --border-secondary: rgba(0, 0, 0, 0.12);
+  --border-input: rgba(0, 0, 0, 0.15);
 
-  --shadow-primary: rgba(0, 0, 0, 0.1);
-  --shadow-secondary: rgba(102, 126, 234, 0.2);
-  --shadow-accent: rgba(255, 107, 53, 0.2);
+  --shadow-primary: rgba(0, 0, 0, 0.08);
+  --shadow-secondary: rgba(0, 0, 0, 0.1);
+  --shadow-accent: rgba(0, 0, 0, 0.15);
 
   --backdrop-blur: blur(10px);
   --backdrop-blur-light: blur(5px);

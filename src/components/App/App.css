@@ -13,7 +13,7 @@
 .App-header {
   width: 100%;
   padding: 20px;
-  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 255, 255, 0.03) 100%);
   backdrop-filter: var(--backdrop-blur);
   border-bottom: 1px solid var(--border-primary);
   margin-bottom: 30px;
@@ -225,7 +225,7 @@ p {
 
 /* Total Earned 스타일 */
 h2 {
-  background: linear-gradient(45deg, var(--text-accent), #ffed4e);
+  background: linear-gradient(45deg, var(--text-accent), var(--text-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -254,10 +254,167 @@ h2 {
 
 .theme-toggle:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px var(--shadow-primary);
+  box-shadow: 0 6px 20px var(--shadow-secondary);
 }
 
 .theme-toggle svg {
   width: 20px;
   height: 20px;
+}
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+  .App {
+    padding: 10px;
+    font-size: calc(8px + 2vmin);
+  }
+
+  .App-header {
+    padding: 15px 10px;
+    margin-bottom: 20px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .header-title {
+    font-size: 2rem;
+    margin-bottom: 10px;
+  }
+
+  .main-content {
+    padding: 0 10px;
+  }
+
+  .allowance-container {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+    padding: 20px 15px;
+  }
+
+  .allowance-input {
+    margin-right: 0;
+    margin-bottom: 10px;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .quest-list {
+    padding: 20px 15px;
+    margin: 15px 0;
+  }
+
+  .quest-list h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .quest-list input[type="text"],
+  .quest-list input[type="number"] {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .quest-list button {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .add-quest {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Total Earned 텍스트 */
+  h2 {
+    font-size: 1.3rem;
+    text-align: center;
+    margin: 15px 0;
+  }
+
+  /* 테마 토글 버튼 모바일 최적화 */
+  .theme-toggle {
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .App {
+    padding: 5px;
+    font-size: calc(6px + 2vmin);
+  }
+
+  .header-title {
+    font-size: 1.8rem;
+  }
+
+  .allowance-container {
+    padding: 15px 10px;
+  }
+
+  .allowance-input {
+    min-width: 180px;
+    font-size: 0.9rem;
+  }
+
+  .quest-list {
+    padding: 15px 10px;
+  }
+
+  .quest-list h2 {
+    font-size: 1.3rem;
+  }
+
+  .quest-list input[type="text"],
+  .quest-list input[type="number"] {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+
+  .quest-list button {
+    font-size: 0.9rem;
+    padding: 10px 20px;
+  }
+
+  /* 로딩 및 로그인 프롬프트 */
+  .loading,
+  .login-prompt {
+    padding: 20px 15px;
+    font-size: 1rem;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .App {
+    padding: 15px;
+  }
+
+  .header-title {
+    font-size: 2.2rem;
+  }
+
+  .quest-list {
+    max-width: 700px;
+  }
+
+  .allowance-container {
+    max-width: 500px;
+  }
 }

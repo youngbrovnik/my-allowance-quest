@@ -42,10 +42,57 @@
 
 /* 다크 테마일 때 태양 아이콘 색상 */
 [data-theme="dark"] .theme-toggle svg {
-  color: #ffd700;
+  color: #ffffff;
 }
 
 /* 라이트 테마일 때 달 아이콘 색상 */
 [data-theme="light"] .theme-toggle svg {
-  color: #667eea;
+  color: #404040;
+}
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 768px) {
+  .theme-toggle {
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+  }
+
+  .theme-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-toggle {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+
+  .theme-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .theme-toggle {
+    top: 25px;
+    right: 25px;
+    width: 52px;
+    height: 52px;
+    padding: 14px;
+  }
+
+  .theme-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
 }

@@ -64,8 +64,6 @@ function Quest({ index, quest, toggleComplete, removeQuest, allowance, totalQues
           <span className="progress-percentage">({Math.round(progressPercentage)}%)</span>
         </div>
       </div>
-
-      {quest.completed && <div className="quest-completed-badge">🎉 이번 달 완료!</div>}
     </div>
   );
 }
