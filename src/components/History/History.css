@@ -39,47 +39,6 @@
   flex-wrap: wrap;
 }
 
-.test-btn {
-  padding: 12px 24px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  backdrop-filter: var(--backdrop-blur-light);
-}
-
-.test-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.test-btn.generate {
-  background: linear-gradient(45deg, #4caf50, #45a049);
-  color: white;
-  border: 1px solid #4caf50;
-}
-
-.test-btn.generate:hover:not(:disabled) {
-  background: linear-gradient(45deg, #45a049, #3d8b40);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.test-btn.clear {
-  background: linear-gradient(45deg, #f44336, #d32f2f);
-  color: white;
-  border: 1px solid #f44336;
-}
-
-.test-btn.clear:hover:not(:disabled) {
-  background: linear-gradient(45deg, #d32f2f, #c62828);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
-}
-
 .history-content {
   display: flex;
   flex-direction: column;

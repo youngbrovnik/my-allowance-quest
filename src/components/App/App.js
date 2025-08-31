@@ -99,20 +99,42 @@ function AppContent() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    const now = new Date();
-    if (now.getMonth() !== lastUpdated.getMonth()) {
-      const resetQuests = questManager.resetQuests();
-      setLastUpdated(new Date());
+    const checkAndResetMonthly = () => {
+      const now = new Date();
+      const lastUpdatedDate = new Date(lastUpdated);
 
-      // Firestore에 초기화된 데이터 저장
-      saveDataToFirestore({
-        allowance,
-        quests: resetQuests,
-        earned: 0,
-        lastUpdated: new Date().toISOString(),
-      });
-    }
-  }, [lastUpdated, allowance, isLoggedIn, saveDataToFirestore, questManager]);
+      // 월이 변경되었고, 아직 이번 달에 초기화하지 않았는지 확인
+      if (now.getMonth() !== lastUpdatedDate.getMonth() || now.getFullYear() !== lastUpdatedDate.getFullYear()) {
+        console.log("월별 리셋 실행:", {
+          currentMonth: now.getMonth() + 1,
+          currentYear: now.getFullYear(),
+          lastMonth: lastUpdatedDate.getMonth() + 1,
+          lastYear: lastUpdatedDate.getFullYear(),
+        });
+
+        questManager.resetQuests().then((resetQuests) => {
+          setLastUpdated(new Date());
+
+          // Firestore에 초기화된 데이터 저장
+          saveDataToFirestore({
+            allowance,
+            quests: resetQuests,
+            earned: 0,
+            lastUpdated: new Date().toISOString(),
+          });
+        });
+      }
+    };
+
+    // 컴포넌트 마운트 시 한 번만 체크
+    checkAndResetMonthly();
+
+    // 1분마다 체크 (월이 바뀌는 시점을 놓치지 않기 위해)
+    const interval = setInterval(checkAndResetMonthly, 60000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, allowance, saveDataToFirestore, questManager]); // lastUpdated 의존성 제거
 
   // 페이지 전환 함수
   const navigateToPage = (page) => {

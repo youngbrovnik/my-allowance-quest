@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
-import { loadMonthlyHistory, generateTestHistory, clearTestHistory } from "../../services/firestoreService";
+import { loadMonthlyHistory } from "../../services/firestoreService";
 import { auth } from "../../config/firebase";
 import "./History.css";
 
@@ -8,8 +8,6 @@ const History = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
   const [error, setError] = useState(null);
   const { theme } = useTheme();
 
@@ -50,58 +48,6 @@ const History = () => {
     setSelectedMonth(null);
   };
 
-  // 테스트 데이터 생성
-  const handleGenerateTestData = async () => {
-    if (!auth.currentUser) {
-      setError("로그인이 필요합니다.");
-      return;
-    }
-
-    setIsGenerating(true);
-    setError(null);
-    try {
-      const success = await generateTestHistory(auth.currentUser.uid);
-      if (success) {
-        // 히스토리 다시 로드
-        const monthlyHistory = await loadMonthlyHistory(auth.currentUser.uid, 12);
-        setHistory(monthlyHistory);
-      } else {
-        setError("테스트 데이터 생성에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("테스트 데이터 생성 중 오류:", error);
-      setError("테스트 데이터 생성 중 오류가 발생했습니다: " + error.message);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // 테스트 데이터 삭제
-  const handleClearTestData = async () => {
-    if (!auth.currentUser) {
-      setError("로그인이 필요합니다.");
-      return;
-    }
-
-    if (!window.confirm("테스트 데이터를 모두 삭제하시겠습니까?")) return;
-
-    setIsClearing(true);
-    setError(null);
-    try {
-      const success = await clearTestHistory(auth.currentUser.uid);
-      if (success) {
-        setHistory([]);
-      } else {
-        setError("테스트 데이터 삭제에 실패했습니다.");
-      }
-    } catch (error) {
-      console.error("테스트 데이터 삭제 중 오류:", error);
-      setError("테스트 데이터 삭제 중 오류가 발생했습니다: " + error.message);
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="history-container" data-theme={theme}>
@@ -132,22 +78,10 @@ const History = () => {
         </div>
       )}
 
-      {/* 테스트 데이터 관리 버튼 */}
-      <div className="test-data-controls">
-        <button className="test-btn generate" onClick={handleGenerateTestData} disabled={isGenerating}>
-          {isGenerating ? "생성 중..." : "🧪 테스트 데이터 생성"}
-        </button>
-        {history.length > 0 && (
-          <button className="test-btn clear" onClick={handleClearTestData} disabled={isClearing}>
-            {isClearing ? "삭제 중..." : "🗑️ 테스트 데이터 삭제"}
-          </button>
-        )}
-      </div>
-
       {history.length === 0 ? (
         <div className="no-history">
           <p>아직 히스토리가 없습니다.</p>
-          <p>위의 "테스트 데이터 생성" 버튼을 클릭하여 샘플 데이터를 만들어보세요!</p>
+          <p>월별 퀘스트 완료 후 다음 달에 자동으로 저장됩니다.</p>
         </div>
       ) : (
         <div className="history-content">
