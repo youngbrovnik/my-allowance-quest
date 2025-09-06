@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Quest from "./Quest";
 import "./Quest.css";
 
-function QuestList({ quests, addQuest, removeQuest, toggleComplete, allowance }) {
+function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuests, allowance }) {
   const [questName, setQuestName] = useState("");
   const [questFrequency, setQuestFrequency] = useState(1);
 
@@ -28,24 +29,61 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, allowance })
     }
   };
 
+  const handleDragEnd = (result) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const { source, destination } = result;
+
+    if (source.index === destination.index) {
+      return;
+    }
+
+    reorderQuests(source.index, destination.index);
+  };
+
   return (
     <div className="quest-list">
       <h2>Quest List</h2>
 
       {/* 퀘스트 목록 */}
-      <ul>
-        {quests.map((quest, index) => (
-          <Quest
-            key={index}
-            index={index}
-            quest={quest}
-            toggleComplete={toggleComplete}
-            removeQuest={removeQuest}
-            allowance={allowance}
-            totalQuests={quests.length}
-          />
-        ))}
-      </ul>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="quests">
+          {(provided) => (
+            <ul {...provided.droppableProps} ref={provided.innerRef}>
+              {quests.map((quest, index) => (
+                <Draggable key={`quest-${index}-${quest.name}`} draggableId={`quest-${index}`} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      style={{
+                        ...provided.draggableProps.style,
+                        opacity: snapshot.isDragging ? 0.8 : 1,
+                        transform: snapshot.isDragging
+                          ? `${provided.draggableProps.style?.transform || ""} translateX(-100px)`
+                          : provided.draggableProps.style?.transform,
+                      }}
+                    >
+                      <Quest
+                        index={index}
+                        quest={quest}
+                        toggleComplete={toggleComplete}
+                        removeQuest={removeQuest}
+                        allowance={allowance}
+                        totalQuests={quests.length}
+                        dragHandleProps={provided.dragHandleProps}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
+      </DragDropContext>
 
       {/* 새 퀘스트 추가 폼 */}
       <div className="add-quest">

@@ -148,6 +148,36 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
   );
 
   /**
+   * 퀘스트 순서 변경 (드래그 앤 드롭)
+   */
+  const reorderQuests = useCallback(
+    (startIndex, endIndex) => {
+      const result = Array.from(quests);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+
+      // 순서가 변경되었으므로 earnedPerCompletion 재계산
+      const updatedQuests = recalculateAllQuestsEarnedAmount(result, allowance);
+      const recalculatedEarned = calculateTotalEarned(updatedQuests, allowance);
+
+      // 상태 업데이트
+      setQuests(updatedQuests);
+      setEarned(recalculatedEarned);
+
+      // Firestore에 저장
+      saveDataToFirestore({
+        allowance,
+        quests: updatedQuests,
+        earned: recalculatedEarned,
+        lastUpdated: new Date().toISOString(),
+      });
+
+      return updatedQuests;
+    },
+    [quests, allowance, saveDataToFirestore]
+  );
+
+  /**
    * 퀘스트 초기화 (월별 리셋 등) - 히스토리 저장 포함
    */
   const resetQuests = useCallback(async () => {
@@ -203,6 +233,7 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
     removeQuest,
     toggleQuestComplete,
     recalculateQuestsForNewAllowance,
+    reorderQuests,
     resetQuests,
     setQuests,
     setEarned,

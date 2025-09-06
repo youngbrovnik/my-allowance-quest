@@ -1,7 +1,7 @@
 import React from "react";
 import "./Quest.css";
 
-function Quest({ index, quest, toggleComplete, removeQuest, allowance, totalQuests }) {
+function Quest({ index, quest, toggleComplete, removeQuest, allowance, totalQuests, dragHandleProps = {} }) {
   // 퀘스트별 획득 금액 계산 (저장된 값이 없으면 직접 계산)
   let earnedAmount = quest.earnedPerCompletion || 0;
 
@@ -31,6 +31,11 @@ function Quest({ index, quest, toggleComplete, removeQuest, allowance, totalQues
   return (
     <div className={`quest-card ${quest.completed ? "completed" : ""}`}>
       <div className="quest-header">
+        <div className="drag-handle" title="드래그하여 순서 변경" {...dragHandleProps}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 6h2v2H8V6zm0 4h2v2H8v-2zm0 4h2v2H8v-2zm6-8h2v2h-2V6zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z" />
+          </svg>
+        </div>
         <div className="quest-info">
           <h3 className="quest-name">{quest.name}</h3>
           <div className="quest-meta">

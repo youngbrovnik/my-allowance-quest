@@ -29,6 +29,30 @@
   margin-bottom: 20px;
 }
 
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  color: var(--text-muted);
+  cursor: grab;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.drag-handle:hover {
+  color: var(--text-secondary);
+  background: var(--bg-input);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  color: var(--text-primary);
+}
+
 .quest-info {
   flex: 1;
 }
@@ -262,4 +286,63 @@
   .quest-meta {
     gap: 20px;
   }
+}
+
+/* 드래그 앤 드롭 스타일 */
+.quest-card.dragging {
+  opacity: 0.8;
+  transform: rotate(2deg);
+  box-shadow: 0 16px 48px var(--shadow-primary);
+  z-index: 1000;
+}
+
+.quest-card.drag-over {
+  border-color: var(--text-accent);
+  background: var(--bg-input);
+}
+
+/* 드래그 핸들 모바일 최적화 */
+@media (max-width: 768px) {
+  .drag-handle {
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+  }
+
+  .drag-handle svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* QuestList 스타일 */
+.quest-list {
+  margin: 0;
+  padding: 0;
+}
+
+.quest-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 드래그 앤 드롭 플레이스홀더 */
+.quest-list .placeholder {
+  background: var(--bg-input);
+  border: 2px dashed var(--border-secondary);
+  border-radius: 16px;
+  height: 100px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-style: italic;
+  transition: all 0.3s ease;
+}
+
+.quest-list .placeholder:hover {
+  border-color: var(--text-accent);
+  background: var(--bg-card);
 }

@@ -190,6 +190,7 @@ function AppContent() {
                   addQuest={questManager.addQuest}
                   removeQuest={questManager.removeQuest}
                   toggleComplete={questManager.toggleQuestComplete}
+                  reorderQuests={questManager.reorderQuests}
                   allowance={allowance}
                 />
               </>
