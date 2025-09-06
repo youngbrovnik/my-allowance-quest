@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/my-allowance-quest/static/css/main.b8ec346f.css",
+    "main.js": "/my-allowance-quest/static/js/main.7c08cf12.js",
+    "static/js/453.1ce594ae.chunk.js": "/my-allowance-quest/static/js/453.1ce594ae.chunk.js",
+    "index.html": "/my-allowance-quest/index.html",
+    "main.b8ec346f.css.map": "/my-allowance-quest/static/css/main.b8ec346f.css.map",
+    "main.7c08cf12.js.map": "/my-allowance-quest/static/js/main.7c08cf12.js.map",
+    "453.1ce594ae.chunk.js.map": "/my-allowance-quest/static/js/453.1ce594ae.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b8ec346f.css",
+    "static/js/main.7c08cf12.js"
+  ]
+}
