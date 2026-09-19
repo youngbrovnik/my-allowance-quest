@@ -60,7 +60,7 @@ test.each(['false', 'exception'])('불러오기 실패(%s) 시 편집을 막고 
   await login();
   expect(screen.getByRole('alert')).toHaveTextContent('데이터를 불러오지 못했습니다');
   expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Add Quest' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '퀘스트 추가' })).not.toBeInTheDocument();
   expect(saveUserData).not.toHaveBeenCalled();
   expect(rolloverMonthlyData).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: '다시 불러오기' }));
@@ -189,7 +189,7 @@ test.each(['success', 'failure'])('월 전환 중 계정 변경 후 이전 응�
   loadUserData.mockResolvedValueOnce(priorData()).mockResolvedValueOnce(null);
   render(<App />);
   await login();
-  expect(screen.queryByRole('button', { name: 'Add Quest' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '퀘스트 추가' })).not.toBeInTheDocument();
   await login({ uid: 'user-b', email: 'b@example.com' });
   await act(async () => { outcome === 'success' ? resolve(resetData()) : reject(new Error('failed')); });
   expect(screen.queryByText('이전 계정 퀘스트')).not.toBeInTheDocument();
@@ -205,12 +205,12 @@ test('월 전환 중에는 추가·완료·삭제·용돈 편집 화면을 열�
   render(<App />);
   await login();
   expect(screen.getByRole('status')).toHaveTextContent('월별 기록을 저장');
-  expect(screen.queryByRole('button', { name: 'Add Quest' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '퀘스트 추가' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '완료' })).not.toBeInTheDocument();
   expect(saveUserData).not.toHaveBeenCalled();
   await act(async () => { finish(resetData()); });
-  expect(screen.getByRole('button', { name: 'Add Quest' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '퀘스트 추가' })).toBeInTheDocument();
   expect(screen.getByText('Total Earned: 0')).toBeInTheDocument();
 });
 
@@ -220,7 +220,7 @@ test('월 전환 실패 시 편집을 막고 재시도 성공 후에만 초기�
   render(<App />);
   await login();
   expect(screen.getByRole('alert')).toHaveTextContent('월별 저장에 실패');
-  expect(screen.queryByRole('button', { name: 'Add Quest' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '퀘스트 추가' })).not.toBeInTheDocument();
   expect(saveUserData).not.toHaveBeenCalled();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: '다시 불러오기' })); });
   expect(screen.getByText('Total Earned: 0')).toBeInTheDocument();
@@ -250,13 +250,13 @@ test('월이 바뀐 직후 버튼을 눌러도 초기화 전에 편집을 저장
     rolloverMonthlyData.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
     render(<App />);
     await login();
-    fireEvent.change(screen.getByPlaceholderText('Quest Name'), { target: { value: '새 퀘스트' } });
+    fireEvent.change(screen.getByLabelText('퀘스트 이름'), { target: { value: '새 퀘스트' } });
     jest.setSystemTime(new Date(2026, 6, 1));
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Add Quest' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: '퀘스트 추가' })); });
     expect(saveUserData).not.toHaveBeenCalled();
     expect(screen.getByRole('status')).toHaveTextContent('월별 기록');
     await act(async () => { finish({ ...data, earned: 0, lastUpdated: new Date().toISOString() }); });
-    expect(screen.getByRole('button', { name: 'Add Quest' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '퀘스트 추가' })).toBeInTheDocument();
   } finally { jest.useRealTimers(); }
 });
 
@@ -412,6 +412,6 @@ test('구버전 월별 기록 내용이 다르면 초기화를 중단한 이유�
   render(<App />);
   await login();
   expect(screen.getByRole('alert')).toHaveTextContent('같은 달에 내용이 다른 기존 기록');
-  expect(screen.queryByRole('button', { name: 'Add Quest' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '퀘스트 추가' })).not.toBeInTheDocument();
   expect(saveUserData).not.toHaveBeenCalled();
 });

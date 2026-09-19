@@ -1,0 +1,142 @@
+/* 기존 모바일의 흐름과 간격을 유지하고 데스크톱에만 확장 레이아웃을 적용합니다. */
+.desktop-only { display: none; }
+.dashboard-sidebar, .earnings-panel { display: contents; }
+
+@media (max-width: 1024px) {
+  .App .App-header, .App .main-content,
+  .App .quest-dashboard > .quest-list, .App .add-quest input {
+    box-sizing: border-box;
+  }
+  .App .quest-dashboard { max-width: 100%; }
+}
+
+@media (min-width: 1025px) {
+  .App {
+    box-sizing: border-box;
+    justify-content: flex-start;
+    padding: 0 48px 20px;
+    font-size: 16px;
+  }
+  .App *, .App *::before, .App *::after { box-sizing: border-box; }
+  .App .desktop-only { display: block; }
+  .App .App-header {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 60px 28px 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .App .header-content { max-width: none; gap: 24px; }
+  .App .header-title {
+    font-size: 25px;
+    letter-spacing: -0.8px;
+    color: var(--text-primary);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+  }
+  .App .header-auth { min-width: 0; }
+  .App .user-info { display: flex; align-items: center; gap: 16px; }
+  .App .user-info p { margin: 0; max-width: 320px; overflow-wrap: anywhere; font-size: 13px; }
+  .App .logout-btn { margin: 0; white-space: nowrap; }
+  .App .theme-toggle { top: 25px; right: max(48px, calc((100vw - 1280px) / 2)); }
+  .App .app-navigation {
+    width: 100%; max-width: 1280px; justify-content: flex-start;
+    padding: 20px 0; margin: 0 auto; gap: 8px;
+  }
+  .App .nav-btn { font-size: 14px; padding: 11px 20px; box-shadow: none; }
+  .App .main-content { max-width: 1280px; padding: 16px 0 0; }
+  .App .dashboard-heading {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    width: 100%; gap: 24px; margin-bottom: 32px;
+  }
+  .App .dashboard-heading h2 {
+    margin: 6px 0 10px; font-size: 32px; letter-spacing: -1px;
+    background: none; -webkit-text-fill-color: currentColor; text-shadow: none;
+  }
+  .App .dashboard-heading p { margin: 0; font-size: 14px; line-height: 1.6; }
+  .App .dashboard-eyebrow { color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: .4px; }
+  .App .dashboard-count { color: var(--text-secondary); font-size: 13px; padding: 9px 14px; border: 1px solid var(--border-secondary); border-radius: 24px; white-space: nowrap; }
+  .App .quest-dashboard { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; width: 100%; align-items: start; }
+  .App .dashboard-sidebar { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 24px; min-width: 0; }
+  .App .dashboard-sidebar .allowance-container {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    width: 100%; max-width: none; margin: 0; padding: 24px;
+    border-radius: 16px; gap: 18px; text-align: left;
+  }
+  .App .allowance-container h2 {
+    font-size: 20px; margin: 0; line-height: 1.5; overflow-wrap: anywhere;
+    background: none; -webkit-text-fill-color: currentColor; text-shadow: none;
+  }
+  .App .allowance-input { display: block; width: 100%; min-width: 0; margin: 12px 0 0; }
+  .App .allowance-button { padding: 8px 16px; font-size: 13px; box-shadow: none; }
+  .App .earnings-panel {
+    display: block; padding: 24px; border: 1px solid var(--border-secondary);
+    border-radius: 16px; background: var(--bg-card);
+  }
+  .App .earnings-panel > p { margin: 0 0 12px; }
+  .App .earnings-panel h2 {
+    margin: 0 0 24px; font-size: 24px; line-height: 1.5; font-variant-numeric: tabular-nums;
+    background: none; -webkit-text-fill-color: currentColor; text-shadow: none; overflow-wrap: anywhere;
+  }
+  .App .dashboard-progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); }
+  .App .earnings-details progress { width: 100%; height: 7px; margin: 12px 0 20px; appearance: none; border: 0; border-radius: 10px; overflow: hidden; background: var(--bg-input); }
+  .App .earnings-details progress::-webkit-progress-bar { background: var(--bg-input); }
+  .App .earnings-details progress::-webkit-progress-value { background: var(--text-primary); border-radius: 10px; }
+  .App .earnings-details progress::-moz-progress-bar { background: var(--text-primary); }
+  .App .earnings-details dl { margin: 0; display: grid; gap: 14px; }
+  .App .earnings-details dl div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .App .earnings-details dt { color: var(--text-muted); }
+  .App .earnings-details dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+  .App .dashboard-note { margin: 0; padding: 0 8px; font-size: 13px; line-height: 1.9; }
+  .App .quest-dashboard > .quest-list {
+    width: 100%; max-width: none; margin: 0; padding: 28px;
+    text-align: left; border-radius: 18px; min-width: 0;
+  }
+  .App .quest-dashboard > .quest-list > h2 {
+    font-size: 20px; margin: 0 0 8px; background: none;
+    -webkit-text-fill-color: currentColor; text-shadow: none;
+  }
+  .App .quest-list-description { margin: 0 0 24px; font-size: 13px; line-height: 1.6; }
+  .App .quest-empty { padding: 40px 16px; border: 1px dashed var(--border-secondary); border-radius: 12px; text-align: center; font-size: 14px; line-height: 1.7; }
+  .App .quest-dashboard .quest-card { margin: 0 0 16px; padding: 22px; box-shadow: none; border-radius: 12px; }
+  .App .quest-dashboard .quest-card:hover { transform: none; border-color: var(--text-muted); }
+  .App .quest-header { align-items: center; gap: 12px; margin-bottom: 18px; }
+  .App .drag-handle { margin-right: 0; width: 24px; }
+  .App .quest-info { min-width: 0; }
+  .App .quest-name { font-size: 17px; margin-bottom: 10px; text-shadow: none; overflow-wrap: anywhere; }
+  .App .quest-meta { gap: 8px; flex-wrap: wrap; }
+  .App .quest-frequency, .App .quest-earned { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
+  .App .quest-actions { flex-shrink: 0; gap: 8px; }
+  .App .quest-list .complete-btn { padding: 9px 14px; font-size: 13px; box-shadow: none; }
+  .App .quest-list .remove-btn { padding: 0; width: 32px; height: 32px; font-size: 20px; border-radius: 8px; box-shadow: none; }
+  .App .quest-progress { margin: 0 0 0 36px; }
+  .App .progress-bar { height: 6px; margin-bottom: 8px; }
+  .App .progress-text { font-size: 12px; }
+  .App .add-quest { display: grid; grid-template-columns: minmax(0, 1fr) 84px auto; align-items: start; gap: 10px; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-primary); }
+  .App .add-quest input[type="text"], .App .add-quest input[type="number"] { width: 100%; min-width: 0; margin: 0; padding: 12px; font-size: 13px; }
+  .App .add-quest button { margin: 0; padding: 12px 16px; font-size: 13px; box-shadow: none; white-space: nowrap; grid-column: 3; grid-row: 2; }
+  .App .add-quest [role="alert"] { grid-column: 1 / -1; margin: 0; font-size: 13px; }
+  .App .history-container { width: 100%; padding: 0; }
+  .App .history-title { text-align: left; margin: 0 0 28px; background: none; -webkit-text-fill-color: currentColor; text-shadow: none; }
+  .App .history-content { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+  .App .history-summary { position: sticky; top: 24px; padding: 24px; }
+  .App .summary-stats { grid-template-columns: 1fr; gap: 12px; }
+  .App .month-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .App .month-card { min-width: 0; padding: 20px; }
+  .App .month-stats { flex-wrap: wrap; }
+  .App .history-container .quest-list { max-width: none; }
+  .App > .error-message { width: 100%; max-width: 1280px; margin: 20px auto 0; }
+  .App .build-info { max-width: 1280px; margin-top: 40px; }
+  .App .login-prompt { width: 100%; max-width: 640px; margin-top: 100px; padding: 48px; }
+}
+
+.add-quest label { font-size: 14px; font-weight: 600; text-align: left; }
+.quest-input-help { font-size: 13px; line-height: 1.6; text-align: left; color: var(--text-secondary); }
+@media (min-width: 1025px) {
+  .App .quest-name-label { grid-column: 1; grid-row: 1; }
+  .App .quest-frequency-label { grid-column: 2; grid-row: 1; }
+  .App .add-quest input[type="text"] { grid-column: 1; grid-row: 2; }
+  .App .add-quest input[type="number"] { grid-column: 2; grid-row: 2; }
+  .App .quest-input-help { grid-column: 1 / -1; margin: 0; }
+}

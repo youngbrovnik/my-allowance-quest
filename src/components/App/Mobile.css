@@ -1,0 +1,57 @@
+@media (max-width: 768px) {
+  .App { position: relative; }
+  .App .App-header { padding-top: 18px; }
+  .App .header-title {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 44px;
+    font-size: clamp(20px, 5.4vw, 28px);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .App .theme-toggle { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; }
+  .App .header-auth, .App .user-info { min-width: 0; max-width: 100%; }
+  .App .header-title, .App .quest-dashboard > .quest-list > h2 {
+    color: var(--text-primary);
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: none;
+  }
+  .App .user-info p { overflow-wrap: anywhere; }
+  .App .logout-btn, .App .allowance-button, .App .nav-btn,
+  .App .google-login-btn { min-height: 44px; min-width: 44px; }
+  .App .allowance-button { padding: 10px 20px; }
+  .App .quest-dashboard { width: 100%; }
+  .App .quest-dashboard .quest-card { padding: 16px; }
+  .App .quest-dashboard .quest-header {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 12px 8px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .App .quest-dashboard .drag-handle { width: 32px; height: 44px; margin: 0; }
+  .App .quest-dashboard .quest-info { min-width: 0; }
+  .App .quest-dashboard .quest-name { line-height: 1.5; overflow-wrap: anywhere; }
+  .App .quest-dashboard .quest-meta { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .App .quest-dashboard .quest-actions { grid-column: 1 / -1; flex-direction: row; gap: 12px; }
+  .App .quest-dashboard .complete-btn { flex: 1; min-height: 44px; margin: 0; }
+  .App .quest-dashboard .remove-btn { flex: 0 0 44px; width: 44px; height: 44px; padding: 0; margin: 0; }
+  .App .quest-dashboard .quest-progress { margin-bottom: 0; }
+  .App .add-quest { gap: 8px; padding: 16px; }
+  .App .add-quest input { min-height: 44px; margin: 0 0 8px; font-size: 16px; }
+  .App .quest-input-help { margin: 0; }
+  .App .add-quest button { min-height: 44px; }
+  .App .allowance-input { box-sizing: border-box; min-width: 0; width: 100%; font-size: 16px; min-height: 44px; }
+}
+
+/* 태블릿과 좁은 PC 창에서도 테마 버튼의 공간을 확보합니다. */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .App .App-header { padding-right: 88px; }
+  .App .header-content { gap: 20px; }
+  .App .header-title { min-width: 0; }
+  .App .header-auth { min-width: 0; max-width: 55%; }
+  .App .user-info { min-width: 0; }
+  .App .user-info p { min-width: 0; overflow-wrap: anywhere; }
+  .App .logout-btn { flex-shrink: 0; white-space: nowrap; }
+}

@@ -6,12 +6,14 @@ import { useQuestManager } from "../../hooks/useQuestManager";
 import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
 import "./App.css";
 import Login from "../Login/Login";
-import Allowance from "../Allowance/Allowance";
-import QuestList from "../Quest/QuestList";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import History from "../History/History";
 import BuildInfo from "../BuildInfo/BuildInfo";
 import { isValidAllowance } from "../../utils/inputValidation";
+
+import Dashboard from "../Dashboard/Dashboard";
+import "./Desktop.css";
+import "./Mobile.css";
 
 function AppContent() {
   const [user, setUser] = useState(null);
@@ -325,18 +327,17 @@ function AppContent() {
           {/* 메인 콘텐츠 */}
           <main className="main-content">
             {currentPage === "main" ? (
-              <fieldset disabled={saveConflict} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
-                <Allowance allowance={allowance} updateAllowance={updateAllowance} />
-                <h2>Total Earned: {questManager.earned.toLocaleString()}</h2>
-                <QuestList
-                  quests={questManager.quests}
-                  addQuest={(...args) => canEdit() && questManager.addQuest(...args)}
-                  removeQuest={(...args) => canEdit() && questManager.removeQuest(...args)}
-                  toggleComplete={(...args) => canEdit() && questManager.toggleQuestComplete(...args)}
-                  reorderQuests={(...args) => canEdit() && questManager.reorderQuests(...args)}
-                  allowance={allowance}
-                />
-              </fieldset>
+              <Dashboard
+                allowance={allowance}
+                earned={questManager.earned}
+                quests={questManager.quests}
+                disabled={saveConflict}
+                updateAllowance={updateAllowance}
+                addQuest={(...args) => canEdit() && questManager.addQuest(...args)}
+                removeQuest={(...args) => canEdit() && questManager.removeQuest(...args)}
+                toggleComplete={(...args) => canEdit() && questManager.toggleQuestComplete(...args)}
+                reorderQuests={(...args) => canEdit() && questManager.reorderQuests(...args)}
+              />
             ) : (
               <History />
             )}
