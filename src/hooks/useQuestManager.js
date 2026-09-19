@@ -1,16 +1,16 @@
 import { useState, useCallback } from "react";
+import { isValidQuestFrequency } from "../utils/inputValidation";
 import {
   calculateQuestEarnedAmount,
   recalculateAllQuestsEarnedAmount,
   calculateTotalEarned,
   isQuestCompleted,
-  areAllQuestsCompleted,
 } from "../utils/questCalculations";
 
 /**
  * 퀘스트 관리를 위한 커스텀 훅
  */
-export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHistory) => {
+export const useQuestManager = (allowance, saveDataToFirestore) => {
   const [quests, setQuests] = useState([]);
   const [earned, setEarned] = useState(0);
 
@@ -19,7 +19,7 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
    */
   const addQuest = useCallback(
     (questName, questFrequency) => {
-      if (!questName.trim()) return;
+      if (!questName.trim() || !isValidQuestFrequency(questFrequency)) return;
 
       const currentQuestsCount = quests.length + 1;
 
@@ -105,14 +105,8 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
         return quest;
       });
 
-      // 번 돈 재계산
-      const totalEarned = calculateTotalEarned(newQuests, allowance);
-
-      // 모든 퀘스트 완료 시 전체 용돈 획득
-      let finalEarned = totalEarned;
-      if (areAllQuestsCompleted(newQuests)) {
-        finalEarned = allowance;
-      }
+      // 공통 계산 함수에서 전체 완료 보상까지 계산합니다.
+      const finalEarned = calculateTotalEarned(newQuests, allowance);
 
       // 상태 업데이트
       setQuests(newQuests);
@@ -177,55 +171,6 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
     [quests, allowance, saveDataToFirestore]
   );
 
-  /**
-   * 퀘스트 초기화 (월별 리셋 등) - 히스토리 저장 포함
-   */
-  const resetQuests = useCallback(async () => {
-    // 현재 달의 완료 기록을 히스토리로 저장
-    if (saveMonthlyHistory && quests.length > 0) {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-
-      // 이전 달의 데이터를 저장하므로 monthName도 이전 달로 설정
-      const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-      const monthHistory = {
-        month: previousMonth + 1, // 1-12 (사용자 친화적)
-        year: previousYear, // 2024
-        allowance: allowance,
-        quests: quests.map((quest) => ({
-          name: quest.name,
-          frequency: quest.frequency,
-          completedTimes: quest.completedTimes,
-          completed: quest.completed,
-          earnedPerCompletion: quest.earnedPerCompletion,
-        })),
-        totalEarned: earned,
-        completionRate: quests.filter((q) => q.completed).length / quests.length,
-        completedQuests: quests.filter((q) => q.completed).length,
-        totalQuests: quests.length,
-        // createdAt을 이전 달의 마지막 날로 설정 (데이터의 실제 의미)
-        createdAt: new Date(previousYear, previousMonth + 1, 0, 23, 59, 59).toISOString(),
-      };
-
-      await saveMonthlyHistory(monthHistory);
-    }
-
-    // 퀘스트 초기화
-    const resetQuests = quests.map((quest) => ({
-      ...quest,
-      completed: false,
-      completedTimes: 0,
-    }));
-
-    setQuests(resetQuests);
-    setEarned(0);
-
-    return resetQuests;
-  }, [quests, allowance, earned, saveMonthlyHistory]);
-
   return {
     quests,
     earned,
@@ -234,7 +179,6 @@ export const useQuestManager = (allowance, saveDataToFirestore, saveMonthlyHisto
     toggleQuestComplete,
     recalculateQuestsForNewAllowance,
     reorderQuests,
-    resetQuests,
     setQuests,
     setEarned,
   };

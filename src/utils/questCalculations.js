@@ -44,6 +44,9 @@ export const calculateQuestEarnedAmount = (allowance, questCount, frequency) => 
  * @returns {number} 총 획득 금액
  */
 export const calculateTotalEarned = (quests, allowance) => {
+  // 모든 변경 경로에서 전체 완료 보상을 동일하게 적용합니다.
+  if (areAllQuestsCompleted(quests)) return allowance;
+
   let totalEarned = 0;
 
   quests.forEach((quest) => {
@@ -90,5 +93,5 @@ export const isQuestCompleted = (quest) => {
  * @returns {boolean} 모든 퀘스트 완료 여부
  */
 export const areAllQuestsCompleted = (quests) => {
-  return quests.every(isQuestCompleted);
+  return quests.length > 0 && quests.every(isQuestCompleted);
 };

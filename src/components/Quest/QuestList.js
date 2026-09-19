@@ -2,23 +2,24 @@ import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Quest from "./Quest";
 import "./Quest.css";
+import { getDaysInMonth, isValidQuestFrequency } from "../../utils/inputValidation";
 
 function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuests, allowance }) {
   const [questName, setQuestName] = useState("");
   const [questFrequency, setQuestFrequency] = useState(1);
 
-  // 현재 달의 총 일수를 계산하는 함수
-  const getDaysInMonth = (year, month) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  // 현재 달의 총 일수
-  const daysInMonth = getDaysInMonth(new Date().getFullYear(), new Date().getMonth());
+  const [error, setError] = useState("");
+  const daysInMonth = getDaysInMonth();
 
   const handleAddQuest = () => {
     if (!questName.trim()) return;
 
-    addQuest(questName, questFrequency);
+    if (!isValidQuestFrequency(questFrequency)) {
+      setError(`퀘스트 횟수는 1부터 ${getDaysInMonth()}까지 정수로 입력해주세요.`);
+      return;
+    }
+    setError("");
+    addQuest(questName, Number(questFrequency));
     setQuestName("");
     setQuestFrequency(1);
   };
@@ -97,11 +98,16 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
         <input
           type="number"
           value={questFrequency}
-          onChange={(e) => setQuestFrequency(Number(e.target.value))}
+          onChange={(e) => { setQuestFrequency(e.target.value); setError(""); }}
           onKeyDown={handleKeyDown}
+          aria-label="월 퀘스트 횟수"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "quest-frequency-error" : undefined}
+          step="1"
           min="1"
           max={daysInMonth}
         />
+        {error && <p id="quest-frequency-error" role="alert">{error}</p>}
         <button onClick={handleAddQuest}>Add Quest</button>
       </div>
     </div>

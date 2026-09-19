@@ -10,19 +10,23 @@ const History = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [error, setError] = useState(null);
   const { theme } = useTheme();
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
     const loadHistory = async () => {
       if (auth.currentUser) {
         try {
           setError(null);
-          const monthlyHistory = await loadMonthlyHistory(auth.currentUser.uid, 12);
-          setHistory(monthlyHistory);
+          const monthlyHistory = await loadMonthlyHistory(auth.currentUser.uid);
+          if (!cancelled) setHistory(monthlyHistory);
         } catch (error) {
           console.error("히스토리 로딩 중 오류:", error);
-          setError("히스토리를 불러오는 중 오류가 발생했습니다.");
+          if (!cancelled) setError("히스토리를 불러오는 중 오류가 발생했습니다.");
         } finally {
-          setLoading(false);
+          if (!cancelled) setLoading(false);
         }
       } else {
         setLoading(false);
@@ -31,7 +35,8 @@ const History = () => {
     };
 
     loadHistory();
-  }, []);
+    return () => { cancelled = true; };
+  }, [retryCount]);
 
   const getCompletionColor = (rate) => {
     if (rate >= 0.8) return "#4caf50"; // 녹색
@@ -56,12 +61,16 @@ const History = () => {
     );
   }
 
-  if (error && !auth.currentUser) {
+  if (error) {
     return (
       <div className="history-container" data-theme={theme}>
-        <div className="error-message">
+        <div className="error-message" role="alert">
           <p>{error}</p>
-          <p>로그인 후 다시 시도해주세요.</p>
+          {auth.currentUser ? (
+            <button onClick={() => setRetryCount((count) => count + 1)}>다시 불러오기</button>
+          ) : (
+            <p>로그인 후 다시 시도해주세요.</p>
+          )}
         </div>
       </div>
     );
@@ -70,13 +79,6 @@ const History = () => {
   return (
     <div className="history-container" data-theme={theme}>
       <h2 className="history-title">퀘스트 히스토리</h2>
-
-      {/* 에러 메시지 */}
-      {error && (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
-      )}
 
       {history.length === 0 ? (
         <div className="no-history">

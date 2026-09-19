@@ -1,26 +1,40 @@
 import { db } from "../config/firebase";
 import {
   doc,
-  setDoc,
   getDoc,
   updateDoc,
   collection,
   query,
   where,
   getDocs,
-  addDoc,
-  deleteDoc,
+  getDocsFromServer,
+  runTransaction,
 } from "firebase/firestore";
 
 // 사용자 데이터를 Firestore에 저장
-export const saveUserData = async (userId, userData) => {
+export const saveUserData = async (userId, userData, baseData) => {
   try {
+    if (baseData === undefined) throw new Error("저장 기준 데이터가 필요합니다.");
     const userRef = doc(db, "users", userId);
-    await setDoc(userRef, {
-      ...userData,
-      lastUpdated: new Date().toISOString(),
+    return await runTransaction(db, async (transaction) => {
+      const snapshot = await transaction.get(userRef);
+      const current = snapshot.exists() ? snapshot.data() : null;
+      // 기존 문서는 revision이 없어도 마지막 저장일로 충돌을 감지합니다.
+      if (Boolean(current) !== Boolean(baseData) || (current && (
+        (current.revision || 0) !== (baseData.revision || 0) ||
+        current.lastUpdated !== baseData.lastUpdated
+      ))) {
+        return { status: "conflict" };
+      }
+      transaction.set(userRef, {
+        ...current,
+        ...userData,
+        revision: (current?.revision || 0) + 1,
+        // 재시도하더라도 진행 상황이 속한 원래 월을 유지합니다.
+        lastUpdated: userData.lastUpdated || new Date().toISOString(),
+      });
+      return true;
     });
-    return true;
   } catch (error) {
     console.error("사용자 데이터 저장 중 오류 발생:", error);
     return false;
@@ -76,27 +90,93 @@ export const findUserByEmail = async (email) => {
   }
 };
 
-// 월별 히스토리 저장
-export const saveMonthlyHistory = async (userId, monthData) => {
-  try {
-    if (!userId) {
-      throw new Error("사용자 ID가 필요합니다.");
-    }
+// 저장 시각·문서 ID를 제외하고 실제 월별 실적만 비교합니다.
+const historyContents = (history) => JSON.stringify({
+  allowance: history.allowance,
+  totalEarned: history.totalEarned,
+  quests: (history.quests || []).map((quest) => ({
+    name: quest.name,
+    frequency: quest.frequency,
+    completedTimes: quest.completedTimes,
+    completed: quest.completed,
+    earnedPerCompletion: quest.earnedPerCompletion,
+  })),
+});
 
-    const historyRef = collection(db, "users", userId, "history");
-    await addDoc(historyRef, {
-      ...monthData,
-      createdAt: new Date().toISOString(),
-    });
-    return true;
-  } catch (error) {
-    console.error("월별 히스토리 저장 중 오류 발생:", error);
-    return false;
-  }
+// 서버의 최신 데이터로 월별 기록과 초기화를 하나의 트랜잭션에서 처리합니다.
+// 같은 월을 여러 기기에서 처리하거나 재시도해도 기록은 한 번만 생성됩니다.
+export const rolloverMonthlyData = async (userId, now = new Date()) => {
+  if (!userId) throw new Error("사용자 ID가 필요합니다.");
+  const userRef = doc(db, "users", userId);
+  return runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(userRef);
+    if (!snapshot.exists()) return null;
+    const data = snapshot.data();
+    const periodDate = new Date(data.lastUpdated);
+    if (!data.lastUpdated || Number.isNaN(periodDate.getTime())) {
+      throw new Error("기록의 기준 날짜를 확인할 수 없습니다.");
+    }
+    const year = periodDate.getFullYear();
+    const month = periodDate.getMonth() + 1;
+    const currentPeriod = now.getFullYear() * 12 + now.getMonth();
+    const savedPeriod = year * 12 + month - 1;
+    if (savedPeriod === currentPeriod) return data;
+    if (savedPeriod > currentPeriod) throw new Error("기록의 날짜가 현재보다 미래입니다.");
+
+    const quests = data.quests || [];
+    const historyRef = doc(db, "users", userId, "history", `${year}-${String(month).padStart(2, "0")}`);
+    const historySnapshot = quests.length ? await transaction.get(historyRef) : null;
+    const timestamp = now.toISOString();
+    const updatedData = {
+      ...data,
+      revision: (data.revision || 0) + 1,
+      quests: quests.map((quest) => ({ ...quest, completed: false, completedTimes: 0 })),
+      earned: 0,
+      lastUpdated: timestamp,
+    };
+    if (quests.length && !historySnapshot.exists()) {
+      const completedQuests = quests.filter((quest) => quest.completed).length;
+      const monthHistory = {
+        year, month,
+        allowance: data.allowance || 0,
+        quests,
+        totalEarned: data.earned || 0,
+        completionRate: completedQuests / quests.length,
+        completedQuests,
+        totalQuests: quests.length,
+        createdAt: timestamp,
+      };
+      // 웹 SDK의 트랜잭션은 쿼리를 지원하지 않으므로 후보를 서버에서 조회한 뒤,
+      // 각 문서를 트랜잭션 안에서 다시 읽어 수정·삭제 충돌을 감지합니다.
+      const legacyQuery = query(
+        collection(db, "users", userId, "history"),
+        where("year", "==", year),
+        where("month", "==", month)
+      );
+      const candidates = await getDocsFromServer(legacyQuery);
+      let existingHistory = false;
+      for (const candidate of candidates.docs) {
+        const existing = await transaction.get(candidate.ref);
+        if (!existing.exists()) continue;
+        const record = existing.data();
+        if (record.year !== year || record.month !== month) continue;
+        if (historyContents(record) !== historyContents(monthHistory)) {
+          const error = new Error("같은 달에 내용이 다른 기존 기록이 있어 초기화를 중단했습니다.");
+          error.code = "history-conflict";
+          throw error;
+        }
+        existingHistory = true;
+      }
+      // 같은 실적이 이미 저장됐다면 구버전 ID를 그대로 유지합니다.
+      if (!existingHistory) transaction.set(historyRef, monthHistory);
+    }
+    transaction.set(userRef, updatedData);
+    return updatedData;
+  });
 };
 
 // 월별 히스토리 불러오기
-export const loadMonthlyHistory = async (userId, limitCount = 12) => {
+export const loadMonthlyHistory = async (userId, limitCount = null) => {
   try {
     if (!userId) {
       throw new Error("사용자 ID가 필요합니다.");
@@ -119,10 +199,10 @@ export const loadMonthlyHistory = async (userId, limitCount = 12) => {
     history.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     // limit 적용
-    return history.slice(0, limitCount);
+    return limitCount === null ? history : history.slice(0, limitCount);
   } catch (error) {
     console.error("월별 히스토리 불러오기 중 오류 발생:", error);
-    return [];
+    throw error;
   }
 };
 
