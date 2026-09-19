@@ -1,0 +1,23 @@
+.build-info {
+  width: 100%;
+  margin-top: 32px;
+  padding: 16px 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.build-info .build-version {
+  font-weight: 600;
+}
+.build-info details {
+  margin-top: 8px;
+}
+.build-info summary {
+  cursor: pointer;
+  padding: 8px;
+}
+.build-info p {
+  margin: 8px 0;
+  line-height: 1.5;
+}

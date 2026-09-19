@@ -10,6 +10,7 @@ import Allowance from "../Allowance/Allowance";
 import QuestList from "../Quest/QuestList";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import History from "../History/History";
+import BuildInfo from "../BuildInfo/BuildInfo";
 import { isValidAllowance } from "../../utils/inputValidation";
 
 function AppContent() {
@@ -264,6 +265,7 @@ function AppContent() {
     return (
       <div className="App" data-theme={theme}>
         <div className="loading" role="status">{monthlyLoading ? "월별 기록을 저장하고 있습니다..." : "로딩 중..."}</div>
+        <BuildInfo />
       </div>
     );
   }
@@ -345,6 +347,7 @@ function AppContent() {
           <p>로그인하여 용돈 퀘스트를 시작하세요!</p>
         </div>
       )}
+      <BuildInfo />
     </div>
   );
 }
