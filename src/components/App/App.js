@@ -6,10 +6,12 @@ import { useQuestManager } from "../../hooks/useQuestManager";
 import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
 import "./App.css";
 import Login from "../Login/Login";
+import Welcome from "../Welcome/Welcome";
 import ThemeToggle from "../ThemeToggle/ThemeToggle";
 import History from "../History/History";
 import BuildInfo from "../BuildInfo/BuildInfo";
-import { isValidAllowance } from "../../utils/inputValidation";
+import { getQuestMonth } from "../../utils/questDate";
+
 
 import Dashboard from "../Dashboard/Dashboard";
 import "./Desktop.css";
@@ -34,7 +36,6 @@ function AppContent() {
   const unsavedChanges = useRef(new Map());
   const [retryingSave, setRetryingSave] = useState(false);
   const [monthlyLoading, setMonthlyLoading] = useState(false);
-  const [allowance, setAllowance] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [currentPage, setCurrentPage] = useState("main"); // 'main' 또는 'history'
   const { theme } = useTheme();
@@ -84,9 +85,9 @@ function AppContent() {
     [user, isLoggedIn]
   );
 
-  const questManager = useQuestManager(allowance, saveDataToFirestore);
+  const questManager = useQuestManager(saveDataToFirestore);
 
-  const { setQuests, setEarned } = questManager;
+  const { loadData: loadRewardData } = questManager;
 
   // 요청 번호를 확인하여 계정 변경 전의 응답이 현재 데이터를 덮어쓰지 않도록 합니다.
   const loadDataForUser = useCallback(async (currentUser, discardDraft = false) => {
@@ -104,10 +105,8 @@ function AppContent() {
     setLoadError("");
     setSaveError("");
     setSaveConflict(false);
-    setAllowance(0);
     setLastUpdated(new Date());
-    setQuests([]);
-    setEarned(0);
+    loadRewardData(null);
 
     try {
       // 이미 시작한 저장을 마친 후 서버 상태를 읽고 월을 전환합니다.
@@ -116,10 +115,8 @@ function AppContent() {
       const draft = unsavedChanges.current.get(currentUser.uid);
       if (draft && !discardDraft) {
         setSaveConflict(conflictedUsers.current.has(currentUser.uid));
-        setAllowance(draft.allowance);
         setLastUpdated(new Date(draft.lastUpdated));
-        setQuests(draft.quests);
-        setEarned(draft.earned);
+        loadRewardData(draft);
         loadedUserId.current = currentUser.uid;
         setDataReady(true);
         setSaveError("변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.");
@@ -134,16 +131,14 @@ function AppContent() {
       if (userData !== null) {
         const savedDate = new Date(userData.lastUpdated);
         const now = new Date();
-        if (Number.isNaN(savedDate.getTime()) || savedDate.getFullYear() !== now.getFullYear() || savedDate.getMonth() !== now.getMonth()) {
+        if (Number.isNaN(savedDate.getTime()) || getQuestMonth(savedDate) !== getQuestMonth(now)) {
           setMonthlyLoading(true);
           userData = await rolloverMonthlyData(currentUser.uid, now);
           if (version !== loadVersion.current) return;
           if (!userData) throw new Error("초기화할 데이터를 찾을 수 없습니다.");
         }
-        setAllowance(userData.allowance || 0);
         setLastUpdated(new Date(userData.lastUpdated));
-        setQuests(userData.quests || []);
-        setEarned(userData.earned || 0);
+        loadRewardData(userData);
       }
       savedSnapshots.current.set(currentUser.uid, userData);
       if (discardDraft) {
@@ -164,7 +159,7 @@ function AppContent() {
         setMonthlyLoading(false);
       }
     }
-  }, [setQuests, setEarned]);
+  }, [loadRewardData]);
 
   const retrySave = async () => {
     if (!user || retryingSave) return;
@@ -178,7 +173,7 @@ function AppContent() {
     if (saved && !unsavedChanges.current.has(user.uid)) {
       const period = new Date(draft.lastUpdated);
       const now = new Date();
-      if (period.getFullYear() !== now.getFullYear() || period.getMonth() !== now.getMonth()) {
+      if (getQuestMonth(period) !== getQuestMonth(now)) {
         await loadDataForUser(user);
       }
     }
@@ -204,10 +199,8 @@ function AppContent() {
         setSaveError("");
         setSaveConflict(false);
         setRetryingSave(false);
-        setAllowance(0);
-        setLastUpdated(new Date());
-        setQuests([]);
-        setEarned(0);
+            setLastUpdated(new Date());
+        loadRewardData(null);
         setLoading(false);
       }
     });
@@ -216,34 +209,16 @@ function AppContent() {
       unsubscribe();
       invalidateLoad();
     };
-  }, [loadDataForUser, invalidateLoad, setQuests, setEarned]);
+  }, [loadDataForUser, invalidateLoad, loadRewardData]);
 
   const canEdit = () => {
     if (!dataReady || !user || loadedUserId.current !== user.uid || conflictedUsers.current.has(user.uid)) return false;
     const now = new Date();
-    if (now.getMonth() !== lastUpdated.getMonth() || now.getFullYear() !== lastUpdated.getFullYear()) {
+    if (getQuestMonth(now) !== getQuestMonth(lastUpdated)) {
       loadDataForUser(user);
       return false;
     }
     return true;
-  };
-
-  // 용돈 업데이트
-  const updateAllowance = async (newAllowance) => {
-    if (!canEdit() || !isValidAllowance(newAllowance)) return;
-    newAllowance = Number(newAllowance);
-    // 퀘스트 매니저를 통해 모든 퀘스트 재계산
-    const { updatedQuests, recalculatedEarned } = questManager.recalculateQuestsForNewAllowance(newAllowance);
-
-    const updatedData = {
-      allowance: newAllowance,
-      quests: updatedQuests,
-      earned: recalculatedEarned,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    setAllowance(newAllowance);
-    await saveDataToFirestore(updatedData);
   };
 
   // 앱을 열어둔 채 월이 바뀌어도 편집을 잠근 뒤 서버에서 월 전환을 처리합니다.
@@ -251,7 +226,7 @@ function AppContent() {
     if (!isLoggedIn || !dataReady || !user) return;
     const interval = setInterval(() => {
       const now = new Date();
-      if (now.getMonth() !== lastUpdated.getMonth() || now.getFullYear() !== lastUpdated.getFullYear()) {
+      if (getQuestMonth(now) !== getQuestMonth(lastUpdated)) {
         loadDataForUser(user);
       }
     }, 60000);
@@ -308,6 +283,7 @@ function AppContent() {
               )}
             </div>
           )}
+          {questManager.actionError && <p className="reward-action-error" role="alert">{questManager.actionError}</p>}
           {/* 네비게이션 */}
           <nav className="app-navigation">
             <button
@@ -328,25 +304,24 @@ function AppContent() {
           <main className="main-content">
             {currentPage === "main" ? (
               <Dashboard
-                allowance={allowance}
-                earned={questManager.earned}
-                quests={questManager.quests}
+                data={questManager.data}
                 disabled={saveConflict}
-                updateAllowance={updateAllowance}
+                setRewardGoal={(...args) => canEdit() && questManager.setRewardGoal(...args)}
+                spendReward={() => canEdit() && questManager.spendReward()}
+                undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)}
+                updateQuestReward={(...args) => canEdit() && questManager.updateQuestReward(...args)}
                 addQuest={(...args) => canEdit() && questManager.addQuest(...args)}
                 removeQuest={(...args) => canEdit() && questManager.removeQuest(...args)}
                 toggleComplete={(...args) => canEdit() && questManager.toggleQuestComplete(...args)}
                 reorderQuests={(...args) => canEdit() && questManager.reorderQuests(...args)}
               />
             ) : (
-              <History />
+              <History currentData={questManager.data} disabled={saveConflict} undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)} />
             )}
           </main>
         </>
       ) : (
-        <div className="login-prompt">
-          <p>로그인하여 용돈 퀘스트를 시작하세요!</p>
-        </div>
+        <Welcome />
       )}
       <BuildInfo />
     </div>

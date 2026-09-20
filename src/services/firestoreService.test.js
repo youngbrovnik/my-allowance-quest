@@ -87,11 +87,11 @@ test('해가 바뀌어도 전년도 기록으로 저장한다', async () => {
   expect(documents.get(`${userPath}/history/2025-12`)).toMatchObject({ year: 2025, month: 12 });
 });
 
-test('퀘스트가 없으면 빈 기록을 만들지 않고 현재 데이터만 갱신한다', async () => {
+test('퀘스트가 없어도 이미 획득한 보상은 기록하고 이월한다', async () => {
   documents.set(userPath, { ...original(), quests: [] });
   await rolloverMonthlyData('user-a', now);
-  expect(documents.size).toBe(1);
-  expect(documents.get(userPath)).toMatchObject({ quests: [], earned: 0, lastUpdated: now.toISOString() });
+  expect(documents.size).toBe(2);
+  expect(documents.get(userPath)).toMatchObject({ quests: [], balance: 5000, earned: 0, lastUpdated: now.toISOString() });
 });
 
 test.each([undefined, 'invalid', new Date(2027, 1, 1).toISOString()])('날짜 %s가 잘못되면 어떤 문서도 쓰지 않는다', async lastUpdated => {
@@ -252,4 +252,62 @@ test('후보 조회 뒤 삭제된 구버전 문서는 트랜잭션에서 재확�
   await rolloverMonthlyData('user-a', now);
   expect(transactions[0].get).toHaveBeenCalledWith(ref);
   expect(documents.get(historyPath)).toMatchObject({ year: 2026, month: 6, totalEarned: 5000 });
+});
+
+
+test('두 기기의 같은 날짜 완료는 최신 revision 검사로 하나만 반영한다', async () => {
+  const base = original();
+  const draft = { ...base, earned: 10000, lastUpdated: '2026-06-20T10:00:00Z',
+    quests: [{ ...base.quests[0], completedTimes: 2, completed: true, lastCompletedDate: '2026-06-20' }] };
+  expect(await saveUserData('user-a', draft, base)).toBe(true);
+  expect(await saveUserData('user-a', draft, base)).toEqual({ status: 'conflict' });
+  expect(documents.get(userPath)).toMatchObject({ earned: 10000, revision: 1 });
+  expect(documents.get(userPath).quests[0].completedTimes).toBe(2);
+});
+
+test('한국 자정 월 전환에서 지난달 날짜는 기록에 보존하고 새 달에서는 비운다', async () => {
+  const data = { ...original(), lastUpdated: '2026-09-30T14:59:59Z',
+    quests: [{ ...original().quests[0], lastCompletedDate: '2026-09-30' }] };
+  documents.set(userPath, data);
+  const result = await rolloverMonthlyData('user-a', new Date('2026-09-30T15:00:00Z'));
+  expect(documents.get(`${userPath}/history/2026-09`).quests[0].lastCompletedDate).toBe('2026-09-30');
+  expect(result.quests[0]).toMatchObject({ completedTimes: 0, lastCompletedDate: null });
+});
+
+test('새 보상 구조의 잔액과 목표는 이월하고 적립·사용 내역은 지난달에 보관한다', async () => {
+  const entry = { id: 'earn-1', type: 'earn', amount: 2000, name: '운동', questId: 'q1', date: '2026-06-20' };
+  const data = { ...original(), schemaVersion: 2, balance: 8000, earned: 2000, spent: 1000, rewardGoal: { name: '운동화', amount: 120000 },
+    entries: [entry, { id: 'use-1', type: 'spend', amount: -1000, name: '간식', date: '2026-06-20' }], legacyCompletionCount: 0,
+    quests: [{ id: 'q1', name: '운동', frequency: 12, completedTimes: 1, rewardAmount: 2000, lastCompletedDate: '2026-06-20' }] };
+  documents.set(userPath, data);
+  const result = await rolloverMonthlyData('user-a', now);
+  expect(result).toMatchObject({ balance: 8000, earned: 0, spent: 0, entries: [], rewardGoal: data.rewardGoal });
+  expect(result.quests[0]).toMatchObject({ rewardAmount: 2000, completedTimes: 0 });
+  expect(documents.get(historyPath)).toMatchObject({ totalEarned: 2000, totalSpent: 1000, closingBalance: 8000, entries: data.entries, activeDays: 1 });
+  await rolloverMonthlyData('user-a', now);
+  expect(documents.get(userPath).balance).toBe(8000);
+});
+
+test('퀘스트를 모두 지운 달도 남아 있는 사용 내역을 보관한다', async () => {
+  documents.set(userPath, { ...original(), schemaVersion: 2, quests: [], earned: 0, balance: 2000, spent: 1000, rewardGoal: null,
+    entries: [{ id: 'use', type: 'spend', amount: -1000, name: '간식', date: '2026-06-20' }] });
+  await rolloverMonthlyData('user-a', now);
+  expect(documents.get(historyPath).totalSpent).toBe(1000);
+  expect(documents.get(userPath).balance).toBe(2000);
+});
+
+test('새 구조를 이전 형식의 저장 요청으로 덮어쓸 수 없다', async () => {
+  const base = { ...original(), schemaVersion: 2, balance: 5000 };
+  documents.set(userPath, base);
+  expect(await saveUserData('user-a', original(), base)).toEqual({ status: 'conflict' });
+  expect(documents.get(userPath)).toEqual(base);
+});
+
+test('두 기기의 보상 사용도 한 번만 저장된다', async () => {
+  const base = { ...original(), schemaVersion: 2, balance: 5000, spent: 0, rewardGoal: { name: '간식', amount: 1000 } };
+  const draft = { ...base, balance: 4000, spent: 1000, rewardGoal: null, entries: [{ id: 'use', type: 'spend', amount: -1000 }] };
+  documents.set(userPath, base);
+  expect(await saveUserData('user-a', draft, base)).toBe(true);
+  expect(await saveUserData('user-a', draft, base)).toEqual({ status: 'conflict' });
+  expect(documents.get(userPath).balance).toBe(4000);
 });

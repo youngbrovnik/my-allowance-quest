@@ -75,3 +75,12 @@ test('전체 요약은 13개월 이상인 모든 기록의 월수와 금액을 �
   expect(screen.getByText('15,000원')).toBeInTheDocument();
   expect(loadMonthlyHistory).toHaveBeenCalledWith('user-a');
 });
+
+test('일부 실천도 횟수로 표시하며 옛 기록의 날짜는 추정하지 않는다', async () => {
+  loadMonthlyHistory.mockResolvedValueOnce([{ id: 'old', year: 2026, month: 6, totalEarned: 4000,
+    quests: [{ name: '운동', completedTimes: 2, frequency: 12 }], completionRate: 0 }]);
+  render(<History />);
+  expect(await screen.findByText('정보 없음')).toBeInTheDocument();
+  expect(screen.getByText('2 / 12일 실천')).toBeInTheDocument();
+  expect(screen.getByText(/기존 완료 횟수와 획득액은 그대로/)).toBeInTheDocument();
+});

@@ -288,17 +288,34 @@
   }
 }
 
-/* 드래그 앤 드롭 스타일 */
-.quest-card.dragging {
-  opacity: 0.8;
-  transform: rotate(2deg);
-  box-shadow: 0 16px 48px var(--shadow-primary);
-  z-index: 1000;
+/* 고정 위치 드래그의 좌표 기준을 바꾸는 상위 필터를 사용하지 않습니다. */
+.App .quest-list {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
-.quest-card.drag-over {
-  border-color: var(--text-accent);
-  background: var(--bg-input);
+/* 카드의 바깥 여백도 드래그 항목에 포함해 빈자리 높이를 정확히 유지합니다. */
+.quest-list .quest-sortable-item {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.quest-sortable-item span {
+  flex-grow: 0;
+  margin-left: 0;
+}
+
+.App .quest-list .quest-sortable-item > .quest-card {
+  margin: 0;
+  transform: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.App .quest-list .quest-sortable-item.is-dragging > .quest-card {
+  background: var(--bg-secondary);
+  border-color: var(--text-muted);
+  box-shadow: 0 12px 28px var(--shadow-primary);
 }
 
 /* 드래그 핸들 모바일 최적화 */
@@ -345,4 +362,13 @@
 .quest-list .placeholder:hover {
   border-color: var(--text-accent);
   background: var(--bg-card);
+}
+
+.quest-daily-help { font-size: .85rem; color: var(--text-secondary); line-height: 1.7; }
+.quest-card .quest-actions { flex-wrap: wrap; }
+.quest-card .cancel-today-btn { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-secondary); border-radius: 8px; padding: 9px 12px; cursor: pointer; font-size: .8rem; }
+.quest-card .cancel-today-btn:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .quest-card .quest-header { flex-wrap: wrap; }
+  .quest-card .quest-actions { width: 100%; justify-content: flex-end; }
 }

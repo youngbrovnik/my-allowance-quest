@@ -5,7 +5,7 @@ test.each(['', '0', '-1', '1.5', '32'])('잘못된 횟수 %s로 등록하지 않
   const addQuest = jest.fn();
   render(<QuestList quests={[]} addQuest={addQuest} />);
   const name = screen.getByLabelText('퀘스트 이름');
-  const frequency = screen.getByRole('spinbutton');
+  const frequency = screen.getByRole('spinbutton', { name: '월 퀘스트 횟수' });
   fireEvent.change(name, { target: { value: '책 읽기' } });
   fireEvent.change(frequency, { target: { value } });
   fireEvent.click(screen.getByRole('button', { name: '퀘스트 추가' }));
@@ -15,6 +15,6 @@ test.each(['', '0', '-1', '1.5', '32'])('잘못된 횟수 %s로 등록하지 않
   expect(screen.getByRole('alert')).toBeInTheDocument();
   fireEvent.change(frequency, { target: { value: '1' } });
   fireEvent.keyDown(frequency, { key: 'Enter' });
-  expect(addQuest).toHaveBeenCalledWith('책 읽기', 1);
+  expect(addQuest).toHaveBeenCalledWith('책 읽기', 1, 1000);
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });

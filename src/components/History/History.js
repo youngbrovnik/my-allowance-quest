@@ -1,214 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { loadMonthlyHistory } from "../../services/firestoreService";
-import { auth } from "../../config/firebase";
-import "./History.css";
+import React, { useState, useEffect } from 'react';
+import { loadMonthlyHistory } from '../../services/firestoreService';
+import { auth } from '../../config/firebase';
+import { periodStats } from '../../utils/rewardModel';
+import { getQuestMonth } from '../../utils/questDate';
+import RewardEntries from '../Rewards/RewardEntries';
+import '../Rewards/Rewards.css';
 
-const History = () => {
+export function HistoryView({ history = [], currentData, undoSpend, disabled }) {
+  const [selected, setSelected] = useState('current');
+  const [year, month] = getQuestMonth().split('-').map(Number);
+  const records = currentData ? [{ ...currentData, id: 'current', year, month }, ...history] : history;
+  const record = records.find(item => item.id === selected) || records[0];
+  const summary = records.reduce((sum, item) => { const stats = periodStats(item); return { completed: sum.completed + stats.completedCount, earned: sum.earned + stats.earned, spent: sum.spent + stats.spent }; }, { completed: 0, earned: 0, spent: 0 });
+  const stats = record && periodStats(record);
+  return <section className="reward-history"><h2>작은 실천의 기록</h2><p className="reward-muted">목표를 모두 끝내지 않아도, 한 번의 실천은 그대로 남아요.</p>
+    {!records.length ? <p>아직 히스토리가 없습니다.</p> : <>
+      <div className="reward-metrics"><div><span>기록한 기간</span><strong>{records.length}개월</strong></div><div><span>전체 실천</span><strong>{summary.completed}회</strong></div><div><span>전체 적립</span><strong>{summary.earned.toLocaleString()}원</strong></div><div><span>전체 사용</span><strong>{summary.spent.toLocaleString()}원</strong></div></div>
+      <label htmlFor="history-month">월별 기록</label><select id="history-month" value={record?.id} onChange={event => setSelected(event.target.value)}>{records.map(item => <option value={item.id} key={item.id}>{item.year}년 {item.month}월{item.id === 'current' ? ' · 이번 달' : ''}</option>)}</select>
+      {record && <article className="reward-month"><h3>{record.month}월</h3>
+        <div className="reward-metrics"><div><span>완료 횟수</span><strong>{stats.completedCount}회</strong></div><div><span>{stats.hasUnknownDays ? '날짜 확인 가능한 실천일' : '실천한 날짜'}</span><strong>{stats.hasUnknownDays && stats.activeDays === 0 ? '정보 없음' : `${stats.activeDays}일`}</strong></div><div><span>적립</span><strong>{stats.earned.toLocaleString()}원</strong></div><div><span>사용</span><strong>{stats.spent.toLocaleString()}원</strong></div></div>
+        {stats.hasUnknownDays && <p className="reward-footnote">이전 기록에는 완료 날짜가 없어 실천일을 모두 계산할 수 없습니다. 기존 완료 횟수와 획득액은 그대로 보존했습니다.</p>}
+        <h4>퀘스트별 실천</h4><ul className="reward-quest-summary">{(record.quests || []).map((q, i) => <li key={q.id || i}><strong>{q.name}</strong><span>{q.completedTimes || 0} / {q.frequency}일 실천</span><progress aria-label={`${q.name} 월 목표 진행률`} value={Math.min(q.completedTimes || 0, q.frequency)} max={q.frequency} /></li>)}</ul>
+        <RewardEntries entries={record.entries} undoSpend={record.id === 'current' ? undoSpend : undefined} disabled={disabled} />
+        {record.id !== 'current' && <p className="reward-footnote">지난달 기록은 보관용입니다. 사용 기록 취소는 이번 달 내역에서 할 수 있어요.</p>}
+      </article>}
+    </>}
+  </section>;
+}
+export default function History(props) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(null);
-  const [error, setError] = useState(null);
-  const { theme } = useTheme();
-  const [retryCount, setRetryCount] = useState(0);
-
+  const [error, setError] = useState('');
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    const loadHistory = async () => {
-      if (auth.currentUser) {
-        try {
-          setError(null);
-          const monthlyHistory = await loadMonthlyHistory(auth.currentUser.uid);
-          if (!cancelled) setHistory(monthlyHistory);
-        } catch (error) {
-          console.error("히스토리 로딩 중 오류:", error);
-          if (!cancelled) setError("히스토리를 불러오는 중 오류가 발생했습니다.");
-        } finally {
-          if (!cancelled) setLoading(false);
-        }
-      } else {
-        setLoading(false);
-        setError("로그인이 필요합니다.");
-      }
+    setLoading(true); setError('');
+    const load = async () => {
+      try {
+        if (!auth.currentUser) throw new Error('login');
+        const result = await loadMonthlyHistory(auth.currentUser.uid);
+        if (!cancelled) setHistory(result);
+      } catch (error) {
+        if (!cancelled) setError(error.message === 'login' ? '로그인이 필요합니다.' : '히스토리를 불러오는 중 오류가 발생했습니다.');
+      } finally { if (!cancelled) setLoading(false); }
     };
-
-    loadHistory();
+    load();
     return () => { cancelled = true; };
-  }, [retryCount]);
-
-  const getCompletionColor = (rate) => {
-    if (rate >= 0.8) return "#4caf50"; // 녹색
-    if (rate >= 0.6) return "#ff9800"; // 주황색
-    if (rate >= 0.4) return "#ffc107"; // 노란색
-    return "#f44336"; // 빨간색
-  };
-
-  const handleMonthSelect = (monthData) => {
-    setSelectedMonth(monthData);
-  };
-
-  const closeMonthDetail = () => {
-    setSelectedMonth(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="history-container" data-theme={theme}>
-        <div className="loading">히스토리를 불러오는 중...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="history-container" data-theme={theme}>
-        <div className="error-message" role="alert">
-          <p>{error}</p>
-          {auth.currentUser ? (
-            <button onClick={() => setRetryCount((count) => count + 1)}>다시 불러오기</button>
-          ) : (
-            <p>로그인 후 다시 시도해주세요.</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="history-container" data-theme={theme}>
-      <h2 className="history-title">퀘스트 히스토리</h2>
-
-      {history.length === 0 ? (
-        <div className="no-history">
-          <p>아직 히스토리가 없습니다.</p>
-          <p>월별 퀘스트 완료 후 다음 달에 자동으로 저장됩니다.</p>
-        </div>
-      ) : (
-        <div className="history-content">
-          <div className="history-summary">
-            <h3>전체 요약</h3>
-            <div className="summary-stats">
-              <div className="stat-item">
-                <span className="stat-label">총 기록 월</span>
-                <span className="stat-value">{history.length}개월</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">평균 완료율</span>
-                <span className="stat-value">
-                  {Math.round((history.reduce((acc, h) => acc + h.completionRate, 0) / history.length) * 100)}%
-                </span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">총 획득 금액</span>
-                <span className="stat-value">
-                  {history.reduce((acc, h) => acc + h.totalEarned, 0).toLocaleString()}원
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="history-list">
-            <h3>월별 기록</h3>
-            <div className="month-grid">
-              {history.map((monthData, index) => (
-                <div key={monthData.id || index} className="month-card" onClick={() => handleMonthSelect(monthData)}>
-                  <div className="month-header">
-                    <h4>{monthData.month}월</h4>
-                    <span className="year">{monthData.year}년</span>
-                  </div>
-
-                  <div className="month-stats">
-                    <div className="completion-rate">
-                      <div
-                        className="rate-circle"
-                        style={{
-                          background: `conic-gradient(${getCompletionColor(monthData.completionRate)} ${
-                            monthData.completionRate * 360
-                          }deg, var(--bg-input) 0deg)`,
-                        }}
-                      >
-                        <span className="rate-text">{Math.round(monthData.completionRate * 100)}%</span>
-                      </div>
-                    </div>
-
-                    <div className="month-details">
-                      <div className="detail-item">
-                        <span className="detail-label">용돈</span>
-                        <span className="detail-value">{monthData.allowance?.toLocaleString()}원</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">완료</span>
-                        <span className="detail-value">
-                          {monthData.completedQuests}/{monthData.totalQuests}
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">획득</span>
-                        <span className="detail-value">{monthData.totalEarned?.toLocaleString()}원</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 월별 상세 모달 */}
-      {selectedMonth && (
-        <div className="month-detail-modal" onClick={closeMonthDetail}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>{selectedMonth.month}월 상세 기록</h3>
-              <button className="close-btn" onClick={closeMonthDetail}>
-                ×
-              </button>
-            </div>
-
-            <div className="modal-body">
-              <div className="month-overview">
-                <div className="overview-item">
-                  <span className="overview-label">용돈</span>
-                  <span className="overview-value">{selectedMonth.allowance?.toLocaleString()}원</span>
-                </div>
-                <div className="overview-item">
-                  <span className="overview-label">완료율</span>
-                  <span className="overview-value">{Math.round(selectedMonth.completionRate * 100)}%</span>
-                </div>
-                <div className="overview-item">
-                  <span className="overview-label">획득 금액</span>
-                  <span className="overview-value">{selectedMonth.totalEarned?.toLocaleString()}원</span>
-                </div>
-              </div>
-
-              <div className="quest-details">
-                <h4>퀘스트별 완료 현황</h4>
-                <div className="quest-list">
-                  {selectedMonth.quests?.map((quest, index) => (
-                    <div key={index} className="quest-item">
-                      <div className="quest-info">
-                        <span className="quest-name">{quest.name}</span>
-                        <span className="quest-frequency">{quest.frequency}회/월</span>
-                      </div>
-                      <div className="quest-completion">
-                        <span className="completion-status">{quest.completed ? "✅ 완료" : "⏳ 진행중"}</span>
-                        <span className="completion-times">
-                          {quest.completedTimes}/{quest.frequency}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default History;
+  }, [retry]);
+  if (loading) return <p role="status">히스토리를 불러오는 중...</p>;
+  if (error) return <div role="alert"><p>{error}</p>{auth.currentUser && <button onClick={() => setRetry(value => value + 1)}>다시 불러오기</button>}</div>;
+  return <HistoryView history={history} {...props} />;
+}

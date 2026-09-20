@@ -1,185 +1,96 @@
-import { useState, useCallback } from "react";
-import { isValidQuestFrequency } from "../utils/inputValidation";
-import {
-  calculateQuestEarnedAmount,
-  recalculateAllQuestsEarnedAmount,
-  calculateTotalEarned,
-  isQuestCompleted,
-} from "../utils/questCalculations";
+import { useState, useCallback, useRef } from 'react';
+import { getQuestDay } from '../utils/questDate';
+import { isValidQuestFrequency } from '../utils/inputValidation';
+import { activeEntries, makeEntry, newRewardId, normalizeRewardData, validMoney } from '../utils/rewardModel';
 
-/**
- * 퀘스트 관리를 위한 커스텀 훅
- */
-export const useQuestManager = (allowance, saveDataToFirestore) => {
-  const [quests, setQuests] = useState([]);
-  const [earned, setEarned] = useState(0);
+export const useQuestManager = (saveDataToFirestore) => {
+  const [data, setData] = useState(() => normalizeRewardData());
+  const current = useRef(data);
+  const [actionError, setActionError] = useState('');
+  const loadData = useCallback(value => {
+    const next = normalizeRewardData(value);
+    current.current = next;
+    setData(next);
+    setActionError('');
+  }, []);
+  const commit = useCallback(next => {
+    if (!next) return false;
+    if (!Number.isSafeInteger(next.balance) || next.balance < 0 || !Number.isSafeInteger(next.earned)) {
+      setActionError('잔액을 확인해 주세요. 이미 사용한 금액은 사용 기록을 먼저 취소해야 합니다.');
+      return false;
+    }
+    const draft = { ...next, lastUpdated: new Date().toISOString() };
+    current.current = draft;
+    setData(draft);
+    setActionError('');
+    saveDataToFirestore(draft);
+    return true;
+  }, [saveDataToFirestore]);
 
-  /**
-   * 퀘스트 추가
-   */
-  const addQuest = useCallback(
-    (questName, questFrequency) => {
-      if (!questName.trim() || !isValidQuestFrequency(questFrequency)) return;
-
-      const currentQuestsCount = quests.length + 1;
-
-      // 새 퀘스트 생성
-      const newQuest = {
-        name: questName.trim(),
-        frequency: Number(questFrequency),
-        completed: false,
-        completedTimes: 0,
-        earnedPerCompletion: calculateQuestEarnedAmount(allowance, currentQuestsCount, questFrequency),
-      };
-
-      // 모든 퀘스트의 earnedPerCompletion 재계산
-      const allQuests = [...quests, newQuest];
-      const updatedQuests = recalculateAllQuestsEarnedAmount(allQuests, allowance);
-
-      // 번 돈 재계산
-      const recalculatedEarned = calculateTotalEarned(updatedQuests, allowance);
-
-      // 상태 업데이트
-      setQuests(updatedQuests);
-      setEarned(recalculatedEarned);
-
-      // Firestore에 저장
-      saveDataToFirestore({
-        allowance,
-        quests: updatedQuests,
-        earned: recalculatedEarned,
-        lastUpdated: new Date().toISOString(),
-      });
-
-      return updatedQuests;
-    },
-    [quests, allowance, saveDataToFirestore]
-  );
-
-  /**
-   * 퀘스트 삭제
-   */
-  const removeQuest = useCallback(
-    (index) => {
-      const newQuests = quests.filter((_, i) => i !== index);
-
-      // 남은 퀘스트들의 earnedPerCompletion 재계산
-      const updatedQuests = recalculateAllQuestsEarnedAmount(newQuests, allowance);
-
-      // 번 돈 재계산
-      const recalculatedEarned = calculateTotalEarned(updatedQuests, allowance);
-
-      // 상태 업데이트
-      setQuests(updatedQuests);
-      setEarned(recalculatedEarned);
-
-      // Firestore에 저장
-      saveDataToFirestore({
-        allowance,
-        quests: updatedQuests,
-        earned: recalculatedEarned,
-        lastUpdated: new Date().toISOString(),
-      });
-
-      return updatedQuests;
-    },
-    [quests, allowance, saveDataToFirestore]
-  );
-
-  /**
-   * 퀘스트 완료 토글
-   */
-  const toggleQuestComplete = useCallback(
-    (index) => {
-      const newQuests = quests.map((quest, i) => {
-        if (i === index) {
-          const newCompletedTimes = quest.completedTimes + 1;
-          const isCompleted = isQuestCompleted({ ...quest, completedTimes: newCompletedTimes });
-
-          return {
-            ...quest,
-            completed: isCompleted,
-            completedTimes: newCompletedTimes,
-          };
-        }
-        return quest;
-      });
-
-      // 공통 계산 함수에서 전체 완료 보상까지 계산합니다.
-      const finalEarned = calculateTotalEarned(newQuests, allowance);
-
-      // 상태 업데이트
-      setQuests(newQuests);
-      setEarned(finalEarned);
-
-      // Firestore에 저장
-      saveDataToFirestore({
-        allowance,
-        quests: newQuests,
-        earned: finalEarned,
-        lastUpdated: new Date().toISOString(),
-      });
-
-      return { newQuests, finalEarned };
-    },
-    [quests, allowance, saveDataToFirestore]
-  );
-
-  /**
-   * 용돈 변경 시 모든 퀘스트 재계산
-   */
-  const recalculateQuestsForNewAllowance = useCallback(
-    (newAllowance) => {
-      const updatedQuests = recalculateAllQuestsEarnedAmount(quests, newAllowance);
-      const recalculatedEarned = calculateTotalEarned(updatedQuests, newAllowance);
-
-      setQuests(updatedQuests);
-      setEarned(recalculatedEarned);
-
-      return { updatedQuests, recalculatedEarned };
-    },
-    [quests]
-  );
-
-  /**
-   * 퀘스트 순서 변경 (드래그 앤 드롭)
-   */
-  const reorderQuests = useCallback(
-    (startIndex, endIndex) => {
-      const result = Array.from(quests);
-      const [removed] = result.splice(startIndex, 1);
-      result.splice(endIndex, 0, removed);
-
-      // 순서가 변경되었으므로 earnedPerCompletion 재계산
-      const updatedQuests = recalculateAllQuestsEarnedAmount(result, allowance);
-      const recalculatedEarned = calculateTotalEarned(updatedQuests, allowance);
-
-      // 상태 업데이트
-      setQuests(updatedQuests);
-      setEarned(recalculatedEarned);
-
-      // Firestore에 저장
-      saveDataToFirestore({
-        allowance,
-        quests: updatedQuests,
-        earned: recalculatedEarned,
-        lastUpdated: new Date().toISOString(),
-      });
-
-      return updatedQuests;
-    },
-    [quests, allowance, saveDataToFirestore]
-  );
-
-  return {
-    quests,
-    earned,
-    addQuest,
-    removeQuest,
-    toggleQuestComplete,
-    recalculateQuestsForNewAllowance,
-    reorderQuests,
-    setQuests,
-    setEarned,
+  const addQuest = (name, frequency, rewardAmount) => {
+    if (!name.trim() || !isValidQuestFrequency(frequency) || !validMoney(rewardAmount)) return false;
+    const state = current.current;
+    return commit({ ...state, quests: [...state.quests, { id: newRewardId(), name: name.trim(), frequency: Number(frequency), rewardAmount: Number(rewardAmount), completedTimes: 0, completed: false, lastCompletedDate: null }] });
   };
+  const updateQuestReward = (id, value) => {
+    if (!validMoney(value)) return false;
+    const state = current.current;
+    return commit({ ...state, quests: state.quests.map(q => q.id === id ? { ...q, rewardAmount: Number(value) } : q) });
+  };
+  // 삭제는 향후 할 일만 없애며, 이미 쌓인 보상과 완료 내역은 남깁니다.
+  const removeQuest = id => {
+    const state = current.current;
+    return commit({ ...state, quests: state.quests.filter(q => q.id !== id) });
+  };
+  const toggleQuestComplete = (id, action = 'complete') => {
+    const state = current.current;
+    const quest = state.quests.find(q => q.id === id);
+    if (!quest || !['complete', 'cancel'].includes(action)) return false;
+    const today = getQuestDay();
+    const doneToday = quest.lastCompletedDate === today;
+    const cancel = action === 'cancel';
+    if (cancel ? !doneToday : doneToday || quest.completedTimes >= quest.frequency) return false;
+    const original = activeEntries(state.entries).find(e => e.type === 'earn' && e.questId === id && e.date === today);
+    if (cancel && !original) {
+      setActionError('이전 방식으로 작성된 기록은 적립 당시 금액을 확인할 수 없어 취소할 수 없습니다.');
+      return false;
+    }
+    const amount = cancel ? original.amount : quest.rewardAmount;
+    if (!validMoney(amount)) return false;
+    const delta = cancel ? -amount : amount;
+    const completedTimes = quest.completedTimes + (cancel ? -1 : 1);
+    return commit({
+      ...state, balance: state.balance + delta, earned: state.earned + delta,
+      quests: state.quests.map(q => q.id === id ? { ...q, completedTimes, completed: completedTimes >= q.frequency, lastCompletedDate: cancel ? null : today } : q),
+      entries: [...state.entries, makeEntry(cancel ? 'cancel' : 'earn', delta, quest.name, { questId: id, ...(cancel ? { reverses: original.id } : {}) })],
+    });
+  };
+  const reorderQuests = (start, end) => {
+    const state = current.current;
+    if (!state.quests[start] || !state.quests[end]) return false;
+    const quests = [...state.quests];
+    const [quest] = quests.splice(start, 1);
+    quests.splice(end, 0, quest);
+    return commit({ ...state, quests });
+  };
+  const setRewardGoal = (name, amount) => {
+    if (!name.trim() || !validMoney(amount)) return false;
+    return commit({ ...current.current, rewardGoal: { name: name.trim(), amount: Number(amount) } });
+  };
+  const spendReward = () => {
+    const state = current.current;
+    const goal = state.rewardGoal;
+    if (!goal) return false;
+    if (state.balance < goal.amount) { setActionError('보상을 사용하기에는 아직 잔액이 부족해요.'); return false; }
+    return commit({ ...state, balance: state.balance - goal.amount, spent: state.spent + goal.amount, rewardGoal: null,
+      entries: [...state.entries, makeEntry('spend', -goal.amount, goal.name)] });
+  };
+  const undoSpend = id => {
+    const state = current.current;
+    const entry = activeEntries(state.entries).find(e => e.id === id && e.type === 'spend');
+    if (!entry) return false;
+    return commit({ ...state, balance: state.balance - entry.amount, spent: state.spent + entry.amount,
+      entries: [...state.entries, makeEntry('refund', -entry.amount, entry.name, { reverses: entry.id })] });
+  };
+  return { data, quests: data.quests, earned: data.earned, actionError, loadData, addQuest, updateQuestReward, removeQuest, toggleQuestComplete, reorderQuests, setRewardGoal, spendReward, undoSpend };
 };

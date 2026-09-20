@@ -1,3 +1,5 @@
+import { normalizeRewardData, periodStats } from "../utils/rewardModel";
+import { getQuestMonth } from "../utils/questDate";
 import { db } from "../config/firebase";
 import {
   doc,
@@ -20,7 +22,7 @@ export const saveUserData = async (userId, userData, baseData) => {
       const snapshot = await transaction.get(userRef);
       const current = snapshot.exists() ? snapshot.data() : null;
       // 기존 문서는 revision이 없어도 마지막 저장일로 충돌을 감지합니다.
-      if (Boolean(current) !== Boolean(baseData) || (current && (
+      if ((current?.schemaVersion === 2 && userData.schemaVersion !== 2) || Boolean(current) !== Boolean(baseData) || (current && (
         (current.revision || 0) !== (baseData.revision || 0) ||
         current.lastUpdated !== baseData.lastUpdated
       ))) {
@@ -116,32 +118,42 @@ export const rolloverMonthlyData = async (userId, now = new Date()) => {
     if (!data.lastUpdated || Number.isNaN(periodDate.getTime())) {
       throw new Error("기록의 기준 날짜를 확인할 수 없습니다.");
     }
-    const year = periodDate.getFullYear();
-    const month = periodDate.getMonth() + 1;
-    const currentPeriod = now.getFullYear() * 12 + now.getMonth();
-    const savedPeriod = year * 12 + month - 1;
+    const [year, month] = getQuestMonth(periodDate).split("-").map(Number);
+    const currentPeriod = getQuestMonth(now);
+    const savedPeriod = getQuestMonth(periodDate);
     if (savedPeriod === currentPeriod) return data;
     if (savedPeriod > currentPeriod) throw new Error("기록의 날짜가 현재보다 미래입니다.");
 
     const quests = data.quests || [];
     const historyRef = doc(db, "users", userId, "history", `${year}-${String(month).padStart(2, "0")}`);
-    const historySnapshot = quests.length ? await transaction.get(historyRef) : null;
+    const hasActivity = quests.length || (data.entries || []).length || data.earned || data.spent;
+    const historySnapshot = hasActivity ? await transaction.get(historyRef) : null;
     const timestamp = now.toISOString();
+    const normalized = normalizeRewardData(data);
     const updatedData = {
-      ...data,
+      ...normalized,
       revision: (data.revision || 0) + 1,
-      quests: quests.map((quest) => ({ ...quest, completed: false, completedTimes: 0 })),
+      quests: normalized.quests.map((quest) => ({ ...quest, completed: false, completedTimes: 0, lastCompletedDate: null })),
       earned: 0,
+      spent: 0,
+      entries: [],
+      legacyCompletionCount: 0,
       lastUpdated: timestamp,
     };
-    if (quests.length && !historySnapshot.exists()) {
+    if (hasActivity && !historySnapshot.exists()) {
       const completedQuests = quests.filter((quest) => quest.completed).length;
       const monthHistory = {
         year, month,
+        schemaVersion: 2,
+        entries: normalized.entries,
+        legacyCompletionCount: normalized.legacyCompletionCount || 0,
+        activeDays: periodStats(normalized).activeDays,
+        totalSpent: normalized.spent,
+        closingBalance: normalized.balance,
         allowance: data.allowance || 0,
         quests,
         totalEarned: data.earned || 0,
-        completionRate: completedQuests / quests.length,
+        completionRate: quests.length ? completedQuests / quests.length : 0,
         completedQuests,
         totalQuests: quests.length,
         createdAt: timestamp,
@@ -160,7 +172,7 @@ export const rolloverMonthlyData = async (userId, now = new Date()) => {
         if (!existing.exists()) continue;
         const record = existing.data();
         if (record.year !== year || record.month !== month) continue;
-        if (historyContents(record) !== historyContents(monthHistory)) {
+        if (historyContents(record) !== historyContents(monthHistory) || (record.schemaVersion === 2 && (JSON.stringify(record.entries || []) !== JSON.stringify(monthHistory.entries) || (record.totalSpent || 0) !== monthHistory.totalSpent))) {
           const error = new Error("같은 달에 내용이 다른 기존 기록이 있어 초기화를 중단했습니다.");
           error.code = "history-conflict";
           throw error;

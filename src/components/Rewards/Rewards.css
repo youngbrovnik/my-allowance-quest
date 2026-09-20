@@ -1,0 +1,62 @@
+.reward-dashboard-heading { width:100%; text-align:left; margin:0 0 24px; }
+.reward-dashboard-heading h2 { font-size:28px; letter-spacing:-.04em; margin:8px 0; }
+.reward-dashboard-heading p { font-size:14px; color:var(--text-secondary); }
+.App .reward-dashboard { border:0; padding:0; margin:0; min-width:0; width:100%; text-align:left; font-size:14px; }
+.reward-dashboard *, .reward-history * { box-sizing:border-box; }
+.App .reward-dashboard .dashboard-sidebar { display:block; }
+.reward-main { min-width:0; }
+.reward-wallet, .reward-entries, .reward-month { padding:24px; border:1px solid var(--border-secondary); border-radius:18px; background:var(--bg-card); }
+.reward-wallet h2 { font-size:38px; margin:10px 0; letter-spacing:-.04em; overflow-wrap:anywhere; }
+.reward-wallet h2 small { font-size:18px; margin-left:6px; }
+.reward-eyebrow { font-size:12px; color:var(--text-secondary); margin:0; }
+.reward-muted { font-size:13px; color:var(--text-secondary); line-height:1.7; }
+.reward-totals { display:grid; gap:12px; border-bottom:1px solid var(--border-primary); padding:16px 0 22px; }
+.reward-totals div { display:flex; justify-content:space-between; gap:10px; }
+.reward-totals dd { margin:0; font-weight:700; }
+.reward-goal h3 { margin:10px 0; font-size:20px; overflow-wrap:anywhere; }
+.reward-goal p { font-size:13px; line-height:1.6; }
+.reward-goal progress, .reward-quest-summary progress { width:100%; height:10px; accent-color:#3c8660; }
+.reward-form { display:flex; flex-direction:column; gap:10px; }
+.reward-form label, .reward-inline-form label { font-size:13px; font-weight:600; }
+.reward-form input, .reward-inline-form input, .reward-history select { width:100%; min-width:0; padding:12px; border-radius:8px; border:1px solid var(--border-secondary); background:var(--bg-input); color:var(--text-primary); font:inherit; }
+.reward-wallet button, .reward-entries button, .reward-inline-form button, .reward-small-button { border:1px solid var(--border-secondary); background:var(--bg-tertiary); color:var(--text-primary); padding:10px 12px; border-radius:8px; font:inherit; font-size:12px; cursor:pointer; min-height:40px; }
+.reward-wallet button:disabled { opacity:.45; cursor:default; }
+.reward-wallet button.reward-primary { background:#286448; color:white; }
+.reward-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.reward-confirm { padding:12px; border:1px solid var(--border-secondary); border-radius:10px; margin-top:12px; }
+.reward-confirm button { margin:4px; }
+.reward-footnote { font-size:12px; line-height:1.7; color:var(--text-muted); margin:20px 0 0; }
+.reward-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(115px,1fr)); gap:12px; margin:0 0 22px; }
+.reward-metrics > div { padding:16px; background:var(--bg-card); border:1px solid var(--border-primary); border-radius:12px; }
+.reward-metrics span { display:block; font-size:12px; color:var(--text-secondary); }
+.reward-metrics strong { display:block; font-size:22px; margin-top:6px; overflow-wrap:anywhere; }
+.App .reward-main > .quest-list { width:100%; max-width:none; margin:0; padding:24px; border-radius:18px; text-align:left; }
+.App .reward-main > .quest-list h2 { font-size:22px; margin-top:0; background:none; -webkit-text-fill-color:currentColor; }
+.App .reward-main .quest-actions { flex-wrap:wrap; }
+.App .reward-main .quest-header { flex-wrap:wrap; }
+.App .reward-main .add-quest { display:flex; flex-direction:column; gap:10px; padding:20px 0 0; }
+.App .reward-main .add-quest input { width:100%; margin:0; min-width:0; }
+.App .reward-main .add-quest button { width:100%; margin:0; }
+.reward-inline-form { margin:16px 0; padding:14px; border:1px solid var(--border-secondary); border-radius:10px; }
+.reward-inline-form p { font-size:12px; }
+.reward-inline-form button { margin-right:8px; }
+.reward-entries { margin-top:22px; }
+.reward-entries h3 { font-size:18px; margin:0 0 16px; }
+.reward-entries ul { padding:0; margin:0; list-style:none; }
+.reward-entries li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid var(--border-primary); }
+.reward-entries li:last-child { border-bottom:0; }
+.reward-entries li > div { min-width:0; }
+.reward-entries strong, .reward-entries small { display:block; overflow-wrap:anywhere; }
+.reward-entries small { margin-top:5px; font-size:11px; color:var(--text-muted); }
+.reward-entry-type { display:inline-block; margin-bottom:4px; font-size:11px; color:var(--text-secondary); }
+.reward-entry-amount { text-align:right; flex-shrink:0; font-size:13px; }
+.reward-entry-amount button { margin-top:8px; }
+.reward-history { width:100%; font-size:14px; text-align:left; }
+.reward-history h2 { font-size:28px; margin-top:0; }
+.reward-history select { display:block; max-width:320px; margin:10px 0 22px; }
+.reward-quest-summary { padding:0; list-style:none; }
+.reward-quest-summary li { padding:12px 0; display:grid; grid-template-columns:1fr auto; gap:8px; }
+.reward-quest-summary progress { grid-column:1/-1; }
+.reward-action-error { width:100%; font-size:14px; padding:16px; border:1px solid #b66948; border-radius:8px; }
+@media (max-width:1024px) { .reward-wallet { margin-bottom:24px; } .App .reward-dashboard .dashboard-sidebar { position:static; } }
+@media (max-width:600px) { .App .reward-main > .quest-list, .reward-wallet, .reward-entries, .reward-month { padding:18px; } .reward-wallet button, .reward-inline-form button { min-height:44px; } .reward-dashboard-heading h2 { font-size:24px; } .reward-form input, .reward-inline-form input { font-size:16px; } .reward-entry-amount { max-width:46%; } }

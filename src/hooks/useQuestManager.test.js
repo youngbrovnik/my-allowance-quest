@@ -1,62 +1,17 @@
-import { act, renderHook } from "@testing-library/react";
-import { useQuestManager } from "./useQuestManager";
-
-test.each([0, -1, 1.5, 32, '', Infinity])('직접 호출해도 잘못된 횟수 %s를 저장하지 않는다', (frequency) => {
-  const save = jest.fn();
-  const { result } = renderHook(() => useQuestManager(10000, save, jest.fn()));
-  act(() => { result.current.addQuest('책 읽기', frequency); });
-  expect(save).not.toHaveBeenCalled();
-  expect(result.current.quests).toEqual([]);
-  expect(result.current.earned).toBe(0);
-});
-
-function setupRewards(completedTimes = [3, 3]) {
-  const save = jest.fn();
-  const { result } = renderHook(() => useQuestManager(10000, save, jest.fn()));
-  act(() => {
-    result.current.setQuests(completedTimes.map((times, index) => ({
-      name: `퀘스트 ${index + 1}`, frequency: 3, completedTimes: times,
-      completed: times === 3, earnedPerCompletion: 1000,
-    })));
-  });
-  return { result, save };
-}
-
-test('마지막 완료 후 순서를 바꿔도 전액 보상을 유지하고 저장한다', () => {
-  const { result, save } = setupRewards([3, 2]);
-  act(() => { result.current.toggleQuestComplete(1); });
-  expect(result.current.earned).toBe(10000);
-  act(() => { result.current.reorderQuests(0, 1); });
-  expect(result.current.quests.map(q => q.name)).toEqual(['퀘스트 2', '퀘스트 1']);
-  expect(result.current.earned).toBe(10000);
-  expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ earned: 10000 }));
-});
-
-test('전체 완료 후 용돈을 변경하면 새 용돈 전액으로 계산한다', () => {
-  const { result } = setupRewards();
-  act(() => { result.current.recalculateQuestsForNewAllowance(11000); });
-  expect(result.current.earned).toBe(11000);
-});
-
-test('삭제 후 남은 퀘스트가 모두 완료되면 전액, 모두 삭제하면 0원이다', () => {
-  const { result, save } = setupRewards([3, 1]);
-  act(() => { result.current.removeQuest(1); });
-  expect(result.current.earned).toBe(10000);
-  expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ earned: 10000 }));
-  act(() => { result.current.removeQuest(0); });
-  expect(result.current.earned).toBe(0);
-  expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ earned: 0, quests: [] }));
-});
-
-test('일부 완료 상태에서는 순서를 변경해도 실제 획득 금액을 유지한다', () => {
-  const { result, save } = setupRewards([3, 1]);
-  act(() => { result.current.reorderQuests(0, 1); });
-  expect(result.current.earned).toBe(4000);
-  expect(save).toHaveBeenLastCalledWith(expect.objectContaining({ earned: 4000 }));
-});
-
-test('새 미완료 퀘스트를 추가하면 전체 완료 보상을 적용하지 않는다', () => {
-  const { result } = setupRewards();
-  act(() => { result.current.addQuest('새 퀘스트', 3); });
-  expect(result.current.earned).toBe(6000);
-});
+import { act, renderHook } from '@testing-library/react';
+import { useQuestManager } from './useQuestManager';
+import { normalizeRewardData, periodStats } from '../utils/rewardModel';
+function setup(data=null){const save=jest.fn();const {result}=renderHook(()=>useQuestManager(save));if(data)act(()=>result.current.loadData(data));return {result,save};}
+const seed=()=>({...normalizeRewardData(),quests:[{id:'exercise',name:'운동',frequency:12,completedTimes:0,rewardAmount:2000,lastCompletedDate:null},{id:'read',name:'독서',frequency:20,completedTimes:0,rewardAmount:1000,lastCompletedDate:null}]});
+beforeEach(()=>{jest.useFakeTimers();jest.setSystemTime(new Date('2026-09-20T14:59:59Z'));});afterEach(()=>jest.useRealTimers());
+test.each([0,-1,1.5,32,'',Infinity])('잘못된 목표 횟수 %s는 저장하지 않는다',n=>{const {result,save}=setup();act(()=>result.current.addQuest('운동',n,2000));expect(save).not.toHaveBeenCalled();});
+test.each([0,-1,1.5,'',Infinity,100000001])('잘못된 보상 %s는 저장하지 않는다',n=>{const {result,save}=setup();act(()=>result.current.addQuest('운동',12,n));expect(save).not.toHaveBeenCalled();});
+test('추가해도 다른 단가와 잔액이 바뀌지 않는다',()=>{const {result}=setup(seed());act(()=>result.current.toggleQuestComplete('exercise'));act(()=>result.current.addQuest('청소',4,5000));expect(result.current.quests.map(q=>q.rewardAmount)).toEqual([2000,1000,5000]);expect(result.current.data.balance).toBe(2000);});
+test('연속 클릭 한 번 적립, 자정 후 전날 취소 금지와 새 완료',()=>{const {result,save}=setup(seed());act(()=>{result.current.toggleQuestComplete('exercise');result.current.toggleQuestComplete('exercise');});expect(save).toHaveBeenCalledTimes(1);jest.setSystemTime(new Date('2026-09-20T15:00:00Z'));act(()=>result.current.toggleQuestComplete('exercise','cancel'));expect(save).toHaveBeenCalledTimes(1);act(()=>result.current.toggleQuestComplete('exercise'));expect(result.current.data.balance).toBe(4000);expect(periodStats(result.current.data)).toMatchObject({completedCount:2,activeDays:2});});
+test('단가 변경 후 취소는 원래 금액을 사용하며 재완료만 새 금액 적용',()=>{const {result}=setup(seed());act(()=>result.current.toggleQuestComplete('exercise'));act(()=>result.current.updateQuestReward('exercise',5000));expect(result.current.data.balance).toBe(2000);act(()=>{result.current.toggleQuestComplete('exercise','cancel');result.current.toggleQuestComplete('exercise','cancel');});expect(result.current.data.balance).toBe(0);act(()=>result.current.toggleQuestComplete('exercise'));expect(result.current.data.balance).toBe(5000);expect(periodStats(result.current.data)).toMatchObject({completedCount:1,activeDays:1,earned:5000});});
+test('같은 날 여러 활동도 실천일은 하루',()=>{const {result}=setup(seed());act(()=>{result.current.toggleQuestComplete('exercise');result.current.toggleQuestComplete('read');});expect(periodStats(result.current.data)).toMatchObject({completedCount:2,activeDays:1,earned:3000});});
+test('삭제와 순서 변경이 과거 적립과 실천을 지우지 않는다',()=>{const {result}=setup(seed());act(()=>result.current.toggleQuestComplete('exercise'));act(()=>result.current.reorderQuests(0,1));act(()=>result.current.removeQuest('exercise'));expect(result.current.data.balance).toBe(2000);expect(periodStats(result.current.data).completedCount).toBe(1);expect(result.current.data.entries[0].name).toBe('운동');expect(result.current.quests[0].rewardAmount).toBe(1000);});
+test('최종 완료 보너스와 월 목표 초과 적립 없음',()=>{const d=seed();d.quests=[{...d.quests[0],frequency:1}];const {result,save}=setup(d);act(()=>result.current.toggleQuestComplete('exercise'));expect(result.current.data.balance).toBe(2000);jest.setSystemTime(new Date('2026-09-21T01:00:00Z'));act(()=>result.current.toggleQuestComplete('exercise'));expect(save).toHaveBeenCalledTimes(1);});
+test('사용과 사용 취소는 각각 한 번만 반영',()=>{const {result}=setup(seed());act(()=>result.current.toggleQuestComplete('exercise'));act(()=>result.current.setRewardGoal('커피',1500));act(()=>{result.current.spendReward();result.current.spendReward();});expect(result.current.data.balance).toBe(500);expect(result.current.data.rewardGoal).toBeNull();const e=result.current.data.entries.find(e=>e.type==='spend');act(()=>{result.current.undoSpend(e.id);result.current.undoSpend(e.id);});expect(result.current.data.balance).toBe(2000);expect(result.current.data.spent).toBe(0);});
+test('잔액 부족 사용과 사용 후 음수 잔액 취소를 차단',()=>{const {result}=setup(seed());act(()=>result.current.setRewardGoal('커피',1500));act(()=>result.current.spendReward());expect(result.current.actionError).toContain('잔액이 부족');act(()=>result.current.toggleQuestComplete('exercise'));act(()=>result.current.spendReward());act(()=>result.current.toggleQuestComplete('exercise','cancel'));expect(result.current.data.balance).toBe(500);expect(result.current.actionError).toContain('사용 기록을 먼저 취소');expect(result.current.quests[0].completedTimes).toBe(1);});
+test('기존 횟수와 금액 보존 및 재로그인 중복 이월 방지',()=>{const {result}=setup({allowance:20000,earned:7000,quests:[{name:'운동',frequency:12,completedTimes:3,earnedPerCompletion:2000}],lastUpdated:new Date().toISOString()});expect(result.current.data.balance).toBe(7000);act(()=>result.current.toggleQuestComplete('legacy-0'));const saved=result.current.data;act(()=>result.current.loadData(saved));expect(result.current.data.balance).toBe(9000);expect(periodStats(result.current.data)).toMatchObject({completedCount:4,activeDays:1,hasUnknownDays:true});});
