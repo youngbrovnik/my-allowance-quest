@@ -10,5 +10,7 @@ export const getDaysInMonth = (date = new Date()) => {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 };
 
-export const isValidQuestFrequency = (value, date = new Date()) =>
-  isIntegerInput(value) && Number(value) >= 1 && Number(value) <= getDaysInMonth(date);
+export const MAX_QUEST_FREQUENCY = 30;
+
+export const isValidQuestFrequency = (value) =>
+  isIntegerInput(value) && Number(value) >= 1 && Number(value) <= MAX_QUEST_FREQUENCY;

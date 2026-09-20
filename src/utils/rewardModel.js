@@ -1,4 +1,5 @@
 import { getQuestDay } from './questDate';
+import { MAX_QUEST_FREQUENCY } from './inputValidation';
 
 export const newRewardId = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const validMoney = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isSafeInteger(Number(value)) && Number(value) > 0 && Number(value) <= 100000000;
@@ -19,9 +20,10 @@ const calculateLegacyRewardAmount = (allowance, questCount, frequency) => {
 };
 const normalizeQuest = (quest, index, original, questCount, legacy = false) => {
   const source = quest && typeof quest === 'object' ? quest : {};
-  const frequency = nonNegativeInteger(source.frequency, 1) || 1;
-  const completedTimes = Math.min(nonNegativeInteger(source.completedTimes), frequency);
-  const fallbackReward = validMoney(source.earnedPerCompletion) ? Number(source.earnedPerCompletion) : calculateLegacyRewardAmount(original.allowance, questCount, frequency);
+  const frequency = Math.min(nonNegativeInteger(source.frequency, 1) || 1, MAX_QUEST_FREQUENCY);
+  // 목표 조정으로 이미 완료한 실적이 줄어들지 않도록 보존합니다.
+  const completedTimes = nonNegativeInteger(source.completedTimes);
+  const fallbackReward = validMoney(source.earnedPerCompletion) ? Number(source.earnedPerCompletion) : calculateLegacyRewardAmount(original.allowance, questCount, source.frequency);
   return {
     ...source,
     id: typeof source.id === 'string' && source.id.trim() ? source.id : `${legacy ? 'legacy' : 'quest'}-${index}`,
@@ -33,12 +35,17 @@ const normalizeQuest = (quest, index, original, questCount, legacy = false) => {
     lastCompletedDate: validQuestDate(source.lastCompletedDate) ? source.lastCompletedDate : null,
   };
 };
+const hasValidEntryAmount = (type, amount) => {
+  if (!Number.isSafeInteger(amount) || amount === 0) return false;
+  return ['opening', 'earn', 'refund'].includes(type) ? amount > 0 : amount < 0;
+};
 const normalizeEntry = (entry, index, fallbackDate) => {
-  if (!entry || typeof entry !== 'object' || !['opening', 'earn', 'cancel', 'spend', 'refund'].includes(entry.type) || !Number.isSafeInteger(Number(entry.amount))) return null;
+  const amount = Number(entry?.amount);
+  if (!entry || typeof entry !== 'object' || !['opening', 'earn', 'cancel', 'spend', 'refund'].includes(entry.type) || !hasValidEntryAmount(entry.type, amount)) return null;
   return {
     ...entry,
     id: typeof entry.id === 'string' && entry.id.trim() ? entry.id : `entry-${index}`,
-    amount: Number(entry.amount),
+    amount,
     name: typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : '기록',
     date: validQuestDate(entry.date) ? entry.date : null,
     createdAt: validDate(entry.createdAt) ? entry.createdAt : fallbackDate,

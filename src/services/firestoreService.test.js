@@ -94,6 +94,15 @@ test('퀘스트가 없어도 이미 획득한 보상은 기록하고 이월한�
   expect(documents.get(userPath)).toMatchObject({ quests: [], balance: 5000, earned: 0, lastUpdated: now.toISOString() });
 });
 
+test('손상된 퀘스트와 사용 기록도 정규화한 뒤 안전하게 월 전환한다', async () => {
+  documents.set(userPath, {
+    ...original(), schemaVersion: 2, quests: 'invalid', balance: 5000, spent: 1000,
+    entries: [{ id: 'bad-spend', type: 'spend', amount: 1000, name: '잘못된 사용' }],
+  });
+  await expect(rolloverMonthlyData('user-a', now)).resolves.toMatchObject({ quests: [], balance: 5000, earned: 0, spent: 0, entries: [] });
+  expect(documents.get(historyPath)).toMatchObject({ quests: [], entries: [], totalSpent: 1000, closingBalance: 5000 });
+});
+
 test.each([undefined, 'invalid', new Date(2027, 1, 1).toISOString()])('날짜 %s가 잘못되면 어떤 문서도 쓰지 않는다', async lastUpdated => {
   documents.set(userPath, { ...original(), lastUpdated });
   await expect(rolloverMonthlyData('user-a', now)).rejects.toThrow();

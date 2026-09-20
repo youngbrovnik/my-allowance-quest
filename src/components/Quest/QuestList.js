@@ -4,7 +4,7 @@ import { validMoney } from "../../utils/rewardModel";
 import { useQuestDay } from "../../hooks/useQuestDay";
 import Quest from "./Quest";
 import "./Quest.css";
-import { getDaysInMonth, isValidQuestFrequency } from "../../utils/inputValidation";
+import { MAX_QUEST_FREQUENCY, isValidQuestFrequency } from "../../utils/inputValidation";
 
 function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuests, updateQuestReward }) {
   const today = useQuestDay();
@@ -14,13 +14,12 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
   const [rewardAmount, setRewardAmount] = useState(1000);
 
   const [error, setError] = useState("");
-  const daysInMonth = getDaysInMonth();
 
   const handleAddQuest = () => {
     if (!questName.trim()) return;
 
     if (!isValidQuestFrequency(questFrequency)) {
-      setError(`퀘스트 횟수는 1부터 ${getDaysInMonth()}까지 정수로 입력해주세요.`);
+      setError(`퀘스트 횟수는 1부터 ${MAX_QUEST_FREQUENCY}까지 정수로 입력해주세요.`);
       return;
     }
     if (!validMoney(rewardAmount)) { setError("1회 보상은 1원~1억 원의 정수로 입력해 주세요."); return; }
@@ -102,7 +101,7 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
           onKeyDown={handleKeyDown}
           placeholder="예: 책 20분 읽기"
         />
-        <label className="quest-frequency-label" htmlFor="quest-frequency-input">월 횟수</label>
+        <label className="quest-frequency-label" htmlFor="quest-frequency-input">월 목표 횟수 · 최대 30회</label>
         <input
           id="quest-frequency-input"
           type="number"
@@ -114,11 +113,11 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
           aria-describedby={error ? "quest-frequency-help quest-frequency-error" : "quest-frequency-help"}
           step="1"
           min="1"
-          max={daysInMonth}
+          max={MAX_QUEST_FREQUENCY}
         />
         <label htmlFor="quest-reward-input">1회 완료 보상 (원)</label>
         <input id="quest-reward-input" type="number" min="1" max="100000000" step="1" value={rewardAmount} onChange={e => { setRewardAmount(e.target.value); setError(""); }} onKeyDown={handleKeyDown} />
-        <p id="quest-frequency-help" className="quest-input-help">한 달에 실천할 날짜 수를 1~{daysInMonth}일로 입력해 주세요. 하루에 한 번씩 기록해요.</p>
+        <p id="quest-frequency-help" className="quest-input-help">월 목표를 1~{MAX_QUEST_FREQUENCY}회로 입력해 주세요. 하루에 한 번씩 기록하며, 2월은 실제 날짜 수(28일 또는 29일)만큼 완료할 수 있어요.</p>
         {error && <p id="quest-frequency-error" role="alert">{error}</p>}
         <button onClick={handleAddQuest}>퀘스트 추가</button>
       </div>

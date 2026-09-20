@@ -8,9 +8,14 @@ test('퀘스트 횟수는 0을 거부한다', () => {
   expect(isValidQuestFrequency(0)).toBe(false);
 });
 
-test.each([[2026, 1, 28], [2024, 1, 29], [2026, 3, 30], [2026, 0, 31]])('해당 월의 일수를 상한으로 사용한다 (%s, %s)', (year, month, days) => {
-  const date = new Date(year, month, 1);
-  expect(isValidQuestFrequency(1, date)).toBe(true);
-  expect(isValidQuestFrequency(String(days), date)).toBe(true);
-  expect(isValidQuestFrequency(days + 1, date)).toBe(false);
+test.each(['2026-02-01', '2028-02-01', '2026-04-01', '2026-01-01'])('달과 윤년에 관계없이 최대 30회를 허용한다 (%s)', date => {
+  jest.useFakeTimers();
+  jest.setSystemTime(new Date(date));
+  try {
+    expect(isValidQuestFrequency(1)).toBe(true);
+    expect(isValidQuestFrequency('30')).toBe(true);
+    expect(isValidQuestFrequency(31)).toBe(false);
+  } finally {
+    jest.useRealTimers();
+  }
 });

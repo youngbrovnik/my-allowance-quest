@@ -124,12 +124,13 @@ export const rolloverMonthlyData = async (userId, now = new Date()) => {
     if (savedPeriod === currentPeriod) return data;
     if (savedPeriod > currentPeriod) throw new Error("기록의 날짜가 현재보다 미래입니다.");
 
-    const quests = data.quests || [];
+    // 이후의 월 기록과 초기화는 모두 검증·복구된 데이터만 사용합니다.
+    const normalized = normalizeRewardData(data);
+    const quests = normalized.quests;
     const historyRef = doc(db, "users", userId, "history", `${year}-${String(month).padStart(2, "0")}`);
-    const hasActivity = quests.length || (data.entries || []).length || data.earned || data.spent;
+    const hasActivity = quests.length || normalized.entries.length || normalized.earned || normalized.spent;
     const historySnapshot = hasActivity ? await transaction.get(historyRef) : null;
     const timestamp = now.toISOString();
-    const normalized = normalizeRewardData(data);
     const updatedData = {
       ...normalized,
       revision: (data.revision || 0) + 1,
@@ -150,9 +151,9 @@ export const rolloverMonthlyData = async (userId, now = new Date()) => {
         activeDays: periodStats(normalized).activeDays,
         totalSpent: normalized.spent,
         closingBalance: normalized.balance,
-        allowance: data.allowance || 0,
+        allowance: normalized.allowance || 0,
         quests,
-        totalEarned: data.earned || 0,
+        totalEarned: normalized.earned,
         completionRate: quests.length ? completedQuests / quests.length : 0,
         completedQuests,
         totalQuests: quests.length,
