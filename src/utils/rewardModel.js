@@ -1,4 +1,3 @@
-import { calculateQuestEarnedAmount } from './questCalculations';
 import { getQuestDay } from './questDate';
 
 export const newRewardId = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -8,29 +7,80 @@ export const activeEntries = (entries = []) => {
   return entries.filter(e => !e.reverses && !reversed.has(e.id));
 };
 
+const nonNegativeInteger = (value, fallback = 0) => Number.isSafeInteger(Number(value)) && Number(value) >= 0 ? Number(value) : fallback;
+const validDate = value => typeof value === 'string' && !Number.isNaN(Date.parse(value));
+const validQuestDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+const normalizeGoal = goal => goal && typeof goal === 'object' && typeof goal.name === 'string' && goal.name.trim() && validMoney(goal.amount)
+  ? { name: goal.name.trim(), amount: Number(goal.amount) }
+  : null;
+const calculateLegacyRewardAmount = (allowance, questCount, frequency) => {
+  const allocatedAmount = nonNegativeInteger(allowance) / Math.max(nonNegativeInteger(questCount), 1);
+  return Math.max(Math.floor(allocatedAmount / Math.max(nonNegativeInteger(frequency), 1) / 1000) * 1000, 1000);
+};
+const normalizeQuest = (quest, index, original, questCount, legacy = false) => {
+  const source = quest && typeof quest === 'object' ? quest : {};
+  const frequency = nonNegativeInteger(source.frequency, 1) || 1;
+  const completedTimes = Math.min(nonNegativeInteger(source.completedTimes), frequency);
+  const fallbackReward = validMoney(source.earnedPerCompletion) ? Number(source.earnedPerCompletion) : calculateLegacyRewardAmount(original.allowance, questCount, frequency);
+  return {
+    ...source,
+    id: typeof source.id === 'string' && source.id.trim() ? source.id : `${legacy ? 'legacy' : 'quest'}-${index}`,
+    name: typeof source.name === 'string' && source.name.trim() ? source.name.trim() : '이름 없는 퀘스트',
+    frequency,
+    completedTimes,
+    completed: completedTimes >= frequency,
+    rewardAmount: validMoney(source.rewardAmount) ? Number(source.rewardAmount) : fallbackReward,
+    lastCompletedDate: validQuestDate(source.lastCompletedDate) ? source.lastCompletedDate : null,
+  };
+};
+const normalizeEntry = (entry, index, fallbackDate) => {
+  if (!entry || typeof entry !== 'object' || !['opening', 'earn', 'cancel', 'spend', 'refund'].includes(entry.type) || !Number.isSafeInteger(Number(entry.amount))) return null;
+  return {
+    ...entry,
+    id: typeof entry.id === 'string' && entry.id.trim() ? entry.id : `entry-${index}`,
+    amount: Number(entry.amount),
+    name: typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : '기록',
+    date: validQuestDate(entry.date) ? entry.date : null,
+    createdAt: validDate(entry.createdAt) ? entry.createdAt : fallbackDate,
+    ...(typeof entry.questId === 'string' ? { questId: entry.questId } : {}),
+    ...(typeof entry.reverses === 'string' ? { reverses: entry.reverses } : {}),
+    ...(entry.rewardGoal ? { rewardGoal: normalizeGoal(entry.rewardGoal) } : {}),
+  };
+};
+
 // 구버전의 현재 획득액을 한 번만 가져옵니다. 과거 월 기록은 잔액에 더하지 않습니다.
 export const normalizeRewardData = (data = null) => {
-  const original = data || {};
-  if (original.schemaVersion === 2) return { ...original, entries: original.entries || [], rewardGoal: original.rewardGoal || null };
-  const quests = original.quests || [];
-  const earned = original.earned || 0;
+  const original = data && typeof data === 'object' ? data : {};
+  const now = new Date().toISOString();
+  const lastUpdated = validDate(original.lastUpdated) ? original.lastUpdated : now;
+  const quests = Array.isArray(original.quests) ? original.quests : [];
+  if (original.schemaVersion === 2) {
+    return {
+      ...original,
+      schemaVersion: 2,
+      quests: quests.map((quest, index) => normalizeQuest(quest, index, original, quests.length)),
+      earned: nonNegativeInteger(original.earned),
+      balance: nonNegativeInteger(original.balance),
+      spent: nonNegativeInteger(original.spent),
+      rewardGoal: normalizeGoal(original.rewardGoal),
+      entries: (Array.isArray(original.entries) ? original.entries : []).map((entry, index) => normalizeEntry(entry, index, lastUpdated)).filter(Boolean),
+      legacyCompletionCount: nonNegativeInteger(original.legacyCompletionCount),
+      lastUpdated,
+    };
+  }
+  const earned = nonNegativeInteger(original.earned);
   return {
     ...original,
     schemaVersion: 2,
-    quests: quests.map((quest, index) => ({
-      ...quest,
-      id: quest.id || `legacy-${index}`,
-      rewardAmount: quest.earnedPerCompletion || calculateQuestEarnedAmount(original.allowance || 0, quests.length, quest.frequency),
-      lastCompletedDate: quest.lastCompletedDate || null,
-    })),
+    quests: quests.map((quest, index) => normalizeQuest(quest, index, original, quests.length, true)),
     earned,
     balance: earned,
     spent: 0,
     rewardGoal: null,
-    entries: earned ? [{ id: 'legacy-opening', type: 'opening', amount: earned, name: '기존 획득 금액 이월', date: null, createdAt: original.lastUpdated || new Date().toISOString() }] : [],
-    legacyCompletionCount: quests.reduce((sum, q) => sum + (q.completedTimes || 0), 0),
+    entries: earned ? [{ id: 'legacy-opening', type: 'opening', amount: earned, name: '기존 획득 금액 이월', date: null, createdAt: lastUpdated }] : [],
+    legacyCompletionCount: quests.reduce((sum, q) => sum + nonNegativeInteger(q?.completedTimes), 0),
     migratedFromLegacy: Boolean(data),
-    lastUpdated: original.lastUpdated || new Date().toISOString(),
+    lastUpdated,
   };
 };
 

@@ -1,13 +1,10 @@
-import { isValidAllowance, isValidQuestFrequency } from './inputValidation';
+import { isValidQuestFrequency } from './inputValidation';
 
 test.each(['', ' ', null, undefined, true, NaN, Infinity, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])('잘못된 숫자 입력 %s를 거부한다', (value) => {
-  expect(isValidAllowance(value)).toBe(false);
   expect(isValidQuestFrequency(value)).toBe(false);
 });
 
-test('용돈은 0원을 허용하고 퀘스트 횟수는 0을 거부한다', () => {
-  expect(isValidAllowance('0')).toBe(true);
-  expect(isValidAllowance('15000')).toBe(true);
+test('퀘스트 횟수는 0을 거부한다', () => {
   expect(isValidQuestFrequency(0)).toBe(false);
 });
 

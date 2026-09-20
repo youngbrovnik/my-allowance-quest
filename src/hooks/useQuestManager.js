@@ -83,13 +83,14 @@ export const useQuestManager = (saveDataToFirestore) => {
     if (!goal) return false;
     if (state.balance < goal.amount) { setActionError('보상을 사용하기에는 아직 잔액이 부족해요.'); return false; }
     return commit({ ...state, balance: state.balance - goal.amount, spent: state.spent + goal.amount, rewardGoal: null,
-      entries: [...state.entries, makeEntry('spend', -goal.amount, goal.name)] });
+      entries: [...state.entries, makeEntry('spend', -goal.amount, goal.name, { rewardGoal: { ...goal } })] });
   };
   const undoSpend = id => {
     const state = current.current;
     const entry = activeEntries(state.entries).find(e => e.id === id && e.type === 'spend');
     if (!entry) return false;
     return commit({ ...state, balance: state.balance - entry.amount, spent: state.spent + entry.amount,
+      rewardGoal: state.rewardGoal || entry.rewardGoal || { name: entry.name, amount: -entry.amount },
       entries: [...state.entries, makeEntry('refund', -entry.amount, entry.name, { reverses: entry.id })] });
   };
   return { data, quests: data.quests, earned: data.earned, actionError, loadData, addQuest, updateQuestReward, removeQuest, toggleQuestComplete, reorderQuests, setRewardGoal, spendReward, undoSpend };

@@ -5,8 +5,6 @@ const isIntegerInput = (value) =>
   (typeof value === "number" || (typeof value === "string" && value.trim() !== "")) &&
   Number.isSafeInteger(Number(value));
 
-export const isValidAllowance = (value) => isIntegerInput(value) && Number(value) >= 0;
-
 export const getDaysInMonth = (date = new Date()) => {
   const [year, month] = getQuestMonth(date).split("-").map(Number);
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
