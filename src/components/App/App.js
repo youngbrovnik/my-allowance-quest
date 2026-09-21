@@ -12,7 +12,6 @@ import History from "../History/History";
 import BuildInfo from "../BuildInfo/BuildInfo";
 import { getQuestMonth } from "../../utils/questDate";
 
-
 import Dashboard from "../Dashboard/Dashboard";
 import "./Desktop.css";
 import "./Mobile.css";
@@ -63,7 +62,10 @@ function AppContent() {
           }
           return result === true;
         });
-        saveQueues.current.set(user.uid, pending.catch(() => false));
+        saveQueues.current.set(
+          user.uid,
+          pending.catch(() => false),
+        );
         pendingSaves.current.set(pending, user.uid);
         try {
           saved = (await pending) === true;
@@ -78,11 +80,13 @@ function AppContent() {
       }
       if (version === loadVersion.current && attempt === saveVersion.current) {
         setSaveConflict(conflictedUsers.current.has(user.uid));
-        setSaveError(saved ? "" : "변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.");
+        setSaveError(
+          saved ? "" : "변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.",
+        );
       }
       return saved;
     },
-    [user, isLoggedIn]
+    [user, isLoggedIn],
   );
 
   const questManager = useQuestManager(saveDataToFirestore);
@@ -90,76 +94,88 @@ function AppContent() {
   const { loadData: loadRewardData } = questManager;
 
   // 요청 번호를 확인하여 계정 변경 전의 응답이 현재 데이터를 덮어쓰지 않도록 합니다.
-  const loadDataForUser = useCallback(async (currentUser, discardDraft = false) => {
-    const pendingForUser = [...pendingSaves.current].filter(([, uid]) => uid === currentUser.uid).map(([pending]) => pending);
-    if (!discardDraft && loadedUserId.current === currentUser.uid && unsavedChanges.current.has(currentUser.uid) && pendingForUser.length === 0) {
-      setSaveError("변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.");
-      return;
-    }
-    const version = ++loadVersion.current;
-    loadedUserId.current = null;
-    setDataReady(false);
-    setLoading(true);
-    setMonthlyLoading(false);
-    setRetryingSave(false);
-    setLoadError("");
-    setSaveError("");
-    setSaveConflict(false);
-    setLastUpdated(new Date());
-    loadRewardData(null);
-
-    try {
-      // 이미 시작한 저장을 마친 후 서버 상태를 읽고 월을 전환합니다.
-      await Promise.allSettled(pendingForUser);
-      if (version !== loadVersion.current) return;
-      const draft = unsavedChanges.current.get(currentUser.uid);
-      if (draft && !discardDraft) {
-        setSaveConflict(conflictedUsers.current.has(currentUser.uid));
-        setLastUpdated(new Date(draft.lastUpdated));
-        loadRewardData(draft);
-        loadedUserId.current = currentUser.uid;
-        setDataReady(true);
+  const loadDataForUser = useCallback(
+    async (currentUser, discardDraft = false) => {
+      const pendingForUser = [...pendingSaves.current]
+        .filter(([, uid]) => uid === currentUser.uid)
+        .map(([pending]) => pending);
+      if (
+        !discardDraft &&
+        loadedUserId.current === currentUser.uid &&
+        unsavedChanges.current.has(currentUser.uid) &&
+        pendingForUser.length === 0
+      ) {
         setSaveError("변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.");
         return;
       }
-      let userData = await loadUserData(currentUser.uid);
-      if (version !== loadVersion.current) return;
-      // null만 신규 사용자입니다. 읽기 실패(false)는 빈 데이터로 취급하지 않습니다.
-      if (userData === false || userData === undefined) {
-        throw new Error("사용자 데이터를 불러오지 못했습니다.");
-      }
-      if (userData !== null) {
-        const savedDate = new Date(userData.lastUpdated);
-        const now = new Date();
-        if (Number.isNaN(savedDate.getTime()) || getQuestMonth(savedDate) !== getQuestMonth(now)) {
-          setMonthlyLoading(true);
-          userData = await rolloverMonthlyData(currentUser.uid, now);
-          if (version !== loadVersion.current) return;
-          if (!userData) throw new Error("초기화할 데이터를 찾을 수 없습니다.");
+      const version = ++loadVersion.current;
+      loadedUserId.current = null;
+      setDataReady(false);
+      setLoading(true);
+      setMonthlyLoading(false);
+      setRetryingSave(false);
+      setLoadError("");
+      setSaveError("");
+      setSaveConflict(false);
+      setLastUpdated(new Date());
+      loadRewardData(null);
+
+      try {
+        // 이미 시작한 저장을 마친 후 서버 상태를 읽고 월을 전환합니다.
+        await Promise.allSettled(pendingForUser);
+        if (version !== loadVersion.current) return;
+        const draft = unsavedChanges.current.get(currentUser.uid);
+        if (draft && !discardDraft) {
+          setSaveConflict(conflictedUsers.current.has(currentUser.uid));
+          setLastUpdated(new Date(draft.lastUpdated));
+          loadRewardData(draft);
+          loadedUserId.current = currentUser.uid;
+          setDataReady(true);
+          setSaveError("변경 내용을 저장하지 못했습니다. 다시 저장해주세요. 저장 전까지 월별 초기화를 보류합니다.");
+          return;
         }
-        setLastUpdated(new Date(userData.lastUpdated));
-        loadRewardData(userData);
+        let userData = await loadUserData(currentUser.uid);
+        if (version !== loadVersion.current) return;
+        // null만 신규 사용자입니다. 읽기 실패(false)는 빈 데이터로 취급하지 않습니다.
+        if (userData === false || userData === undefined) {
+          throw new Error("사용자 데이터를 불러오지 못했습니다.");
+        }
+        if (userData !== null) {
+          const savedDate = new Date(userData.lastUpdated);
+          const now = new Date();
+          if (Number.isNaN(savedDate.getTime()) || getQuestMonth(savedDate) !== getQuestMonth(now)) {
+            setMonthlyLoading(true);
+            userData = await rolloverMonthlyData(currentUser.uid, now);
+            if (version !== loadVersion.current) return;
+            if (!userData) throw new Error("초기화할 데이터를 찾을 수 없습니다.");
+          }
+          setLastUpdated(new Date(userData.lastUpdated));
+          loadRewardData(userData);
+        }
+        savedSnapshots.current.set(currentUser.uid, userData);
+        if (discardDraft) {
+          unsavedChanges.current.delete(currentUser.uid);
+          conflictedUsers.current.delete(currentUser.uid);
+        }
+        loadedUserId.current = currentUser.uid;
+        setDataReady(true);
+      } catch (error) {
+        if (version === loadVersion.current) {
+          setLoadError(
+            error.code === "history-conflict"
+              ? "같은 달에 내용이 다른 기존 기록이 있습니다. 기록을 확인할 때까지 초기화를 중단하고 기존 데이터를 유지합니다."
+              : "데이터를 불러오지 못했습니다. 불러오기 또는 월별 저장에 실패하여 편집과 저장을 중단했습니다. 기존 기록을 보호하기 위해 다시 시도해주세요.",
+          );
+        }
+      } finally {
+        if (version === loadVersion.current) {
+          setLoading(false);
+          setMonthlyLoading(false);
+        }
       }
-      savedSnapshots.current.set(currentUser.uid, userData);
-      if (discardDraft) {
-        unsavedChanges.current.delete(currentUser.uid);
-        conflictedUsers.current.delete(currentUser.uid);
-      }
-      loadedUserId.current = currentUser.uid;
-      setDataReady(true);
-    } catch (error) {
-      if (version === loadVersion.current) {
-        setLoadError(error.code === "history-conflict"
-          ? "같은 달에 내용이 다른 기존 기록이 있습니다. 기록을 확인할 때까지 초기화를 중단하고 기존 데이터를 유지합니다."
-          : "데이터를 불러오지 못했습니다. 불러오기 또는 월별 저장에 실패하여 편집과 저장을 중단했습니다. 기존 기록을 보호하기 위해 다시 시도해주세요.");
-      }
-    } finally {
-      if (version === loadVersion.current) {
-        setLoading(false);
-        setMonthlyLoading(false);
-      }
-    }
-  }, [loadRewardData]);
+    },
+    [loadRewardData],
+  );
 
   const retrySave = async () => {
     if (!user || retryingSave) return;
@@ -199,7 +215,7 @@ function AppContent() {
         setSaveError("");
         setSaveConflict(false);
         setRetryingSave(false);
-            setLastUpdated(new Date());
+        setLastUpdated(new Date());
         loadRewardData(null);
         setLoading(false);
       }
@@ -241,7 +257,9 @@ function AppContent() {
   if (loading) {
     return (
       <div className="App" data-theme={theme}>
-        <div className="loading" role="status">{monthlyLoading ? "월별 기록을 저장하고 있습니다..." : "로딩 중..."}</div>
+        <div className="loading" role="status">
+          {monthlyLoading ? "월별 기록을 저장하고 있습니다..." : "로딩 중..."}
+        </div>
         <BuildInfo />
       </div>
     );
@@ -252,7 +270,7 @@ function AppContent() {
       <ThemeToggle />
       <header className="App-header">
         <div className="header-content">
-          <h1 className="header-title">My Allowance Quest</h1>
+          <h1 className="header-title">나의 용돈 퀘스트</h1>
           <div className="header-auth">
             <Login onLogin={() => setIsLoggedIn(true)} isLoggedIn={isLoggedIn} user={user} />
           </div>
@@ -270,7 +288,9 @@ function AppContent() {
             <div role="alert" className="error-message">
               {saveConflict ? (
                 <>
-                  <p>다른 기기에서 기록이 변경되어 저장을 중단했습니다. 현재 화면의 내 변경은 아직 저장되지 않았습니다.</p>
+                  <p>
+                    다른 기기에서 기록이 변경되어 저장을 중단했습니다. 현재 화면의 내 변경은 아직 저장되지 않았습니다.
+                  </p>
                   <button onClick={() => loadDataForUser(user, true)}>내 변경을 버리고 최신 기록 불러오기</button>
                 </>
               ) : (
@@ -283,7 +303,11 @@ function AppContent() {
               )}
             </div>
           )}
-          {questManager.actionError && <p className="reward-action-error" role="alert">{questManager.actionError}</p>}
+          {questManager.actionError && (
+            <p className="reward-action-error" role="alert">
+              {questManager.actionError}
+            </p>
+          )}
           {/* 네비게이션 */}
           <nav className="app-navigation">
             <button
@@ -316,7 +340,11 @@ function AppContent() {
                 reorderQuests={(...args) => canEdit() && questManager.reorderQuests(...args)}
               />
             ) : (
-              <History currentData={questManager.data} disabled={saveConflict} undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)} />
+              <History
+                currentData={questManager.data}
+                disabled={saveConflict}
+                undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)}
+              />
             )}
           </main>
         </>
