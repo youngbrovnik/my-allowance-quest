@@ -1,4 +1,4 @@
-import { normalizeRewardData, periodStats } from './rewardModel';
+import { monthlyMaxReward, normalizeRewardData, periodStats } from './rewardModel';
 
 test('손상된 최신 저장 데이터는 안전한 기본값으로 복구한다', () => {
   const normalized = normalizeRewardData({ schemaVersion: 2, quests: null, entries: 'invalid', balance: 'invalid', earned: -1, spent: 1.5, rewardGoal: { name: '', amount: 1000 }, legacyCompletionCount: -1, lastUpdated: 'invalid' });
@@ -34,4 +34,12 @@ test('기록 종류와 금액 방향이 맞지 않는 손상된 기록은 제거
   ];
   const normalized = normalizeRewardData({ schemaVersion: 2, entries });
   expect(normalized.entries).toEqual([expect.objectContaining({ id: 'valid-spend', amount: -1000 })]);
+});
+
+test('이번 달 최대 보상금은 각 퀘스트의 목표 횟수와 1회 보상금의 합계다', () => {
+  expect(monthlyMaxReward([
+    { frequency: 10, rewardAmount: 1000 },
+    { frequency: 4, rewardAmount: 2500 },
+  ])).toBe(20000);
+  expect(monthlyMaxReward()).toBe(0);
 });

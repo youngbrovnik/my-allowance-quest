@@ -8,11 +8,16 @@
 .reward-wallet, .reward-entries, .reward-month { padding:24px; border:1px solid var(--border-secondary); border-radius:18px; background:var(--bg-card); }
 .reward-wallet h2 { font-size:38px; margin:10px 0; letter-spacing:-.04em; overflow-wrap:anywhere; }
 .reward-wallet h2 small { font-size:18px; margin-left:6px; }
+.reward-wallet h2 .monthly-reward-maximum { color:var(--text-secondary); font-size:16px; font-weight:500; letter-spacing:0; }
 .reward-eyebrow { font-size:12px; color:var(--text-secondary); margin:0; }
 .reward-muted { font-size:13px; color:var(--text-secondary); line-height:1.7; }
 .reward-totals { display:grid; gap:12px; border-bottom:1px solid var(--border-primary); padding:16px 0 22px; }
 .reward-totals div { display:flex; justify-content:space-between; gap:10px; }
 .reward-totals dd { margin:0; font-weight:700; }
+.monthly-reward-progress { padding:14px 0 8px; }
+.monthly-reward-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.monthly-reward-heading strong { font-size:14px; }
+.monthly-reward-progress progress { display:block; width:100%; height:10px; margin-top:12px; accent-color:#3c8660; }
 .reward-goal h3 { margin:10px 0; font-size:20px; overflow-wrap:anywhere; }
 .reward-goal p { font-size:13px; line-height:1.6; }
 .reward-goal progress, .reward-quest-summary progress { width:100%; height:10px; accent-color:#3c8660; }

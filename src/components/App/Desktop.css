@@ -108,8 +108,9 @@
   .App .quest-meta { gap: 8px; flex-wrap: wrap; }
   .App .quest-frequency, .App .quest-earned { font-size: 12px; padding: 4px 8px; border-radius: 6px; }
   .App .quest-actions { flex-shrink: 0; gap: 8px; }
-  .App .quest-list .complete-btn { padding: 9px 14px; font-size: 13px; box-shadow: none; }
-  .App .quest-list .remove-btn { padding: 0; width: 32px; height: 32px; font-size: 20px; border-radius: 8px; box-shadow: none; }
+  .App .quest-list .quest-actions > button { box-sizing:border-box; height:40px; min-height:40px; margin:0; border-radius:8px; }
+  .App .quest-list .complete-btn, .App .quest-list .reward-small-button, .App .quest-list .cancel-today-btn { padding:0 14px; font-size:13px; box-shadow:none; }
+  .App .quest-list .remove-btn { padding:0; width:40px; font-size:20px; box-shadow:none; }
   .App .quest-progress { margin: 0 0 0 36px; }
   .App .progress-bar { height: 6px; margin-bottom: 8px; }
   .App .progress-text { font-size: 12px; }

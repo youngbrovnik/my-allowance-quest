@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { validMoney } from '../../utils/rewardModel';
+import { monthlyMaxReward, validMoney } from '../../utils/rewardModel';
 
 export default function RewardWallet({ data, setRewardGoal, spendReward }) {
   const goal = data.rewardGoal;
@@ -15,10 +15,21 @@ export default function RewardWallet({ data, setRewardGoal, spendReward }) {
     if (setRewardGoal(name, amount)) { setEditing(false); setError(''); }
   };
   const progress = goal ? Math.min(100, Math.floor(data.balance / goal.amount * 100)) : 0;
+  const maxReward = monthlyMaxReward(data.quests);
+  const monthlyProgress = maxReward > 0 ? Math.min(100, Math.floor(data.earned / maxReward * 100)) : 0;
   return <section className="reward-wallet" aria-label="나의 보상">
     <p className="reward-eyebrow">차곡차곡 모은 나의 보상</p>
-    <h2 aria-label={`사용 가능한 보상 ${data.balance.toLocaleString()}원`}>{data.balance.toLocaleString()}<small>원</small></h2>
-    <p className="reward-muted">사용 가능한 잔액 · 다음 달에도 이어져요</p>
+    <h2 aria-label={`이번 달 모은 보상 ${data.earned.toLocaleString()}원 / 최대 ${maxReward.toLocaleString()}원`}>
+      {data.earned.toLocaleString()}<small>원</small>
+      <span className="monthly-reward-maximum"> / {maxReward.toLocaleString()}원</span>
+    </h2>
+    <p className="reward-muted">모은 보상금 / 이번 달 최대 보상금</p>
+    <div className="monthly-reward-progress">
+      <div className="monthly-reward-heading"><p className="reward-eyebrow">이번 달 보상 수행률</p><strong>{monthlyProgress}%</strong></div>
+      <progress aria-label="이번 달 보상 수행률" max="100" value={monthlyProgress} />
+      {maxReward === 0 && <p className="reward-muted">퀘스트를 추가하면 최대 보상금과 수행률이 표시돼요.</p>}
+    </div>
+    <p className="reward-muted" aria-label={`사용 가능한 보상 ${data.balance.toLocaleString()}원`}>사용 가능한 잔액 <strong>{data.balance.toLocaleString()}원</strong> · 다음 달에도 이어져요</p>
     <dl className="reward-totals"><div><dt>이번 달 적립</dt><dd>{data.earned.toLocaleString()}원</dd></div><div><dt>이번 달 사용</dt><dd>{data.spent.toLocaleString()}원</dd></div></dl>
     <div className="reward-goal">
       {goal && !editing ? <>

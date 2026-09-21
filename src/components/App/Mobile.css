@@ -34,9 +34,18 @@
   .App .quest-dashboard .quest-info { min-width: 0; }
   .App .quest-dashboard .quest-name { line-height: 1.5; overflow-wrap: anywhere; }
   .App .quest-dashboard .quest-meta { flex-direction: row; flex-wrap: wrap; gap: 6px; }
-  .App .quest-dashboard .quest-actions { grid-column: 1 / -1; flex-direction: row; gap: 12px; }
-  .App .quest-dashboard .complete-btn { flex: 1; min-height: 44px; margin: 0; }
-  .App .quest-dashboard .remove-btn { flex: 0 0 44px; width: 44px; height: 44px; padding: 0; margin: 0; }
+  .App .quest-dashboard .quest-actions { grid-column: 1 / -1; flex-direction: row; align-items:stretch; gap: 8px; }
+  .App .quest-dashboard .quest-actions > button {
+    box-sizing:border-box;
+    height:44px;
+    min-height:44px;
+    margin:0;
+    border-radius:10px;
+  }
+  .App .quest-dashboard .complete-btn,
+  .App .quest-dashboard .reward-small-button,
+  .App .quest-dashboard .cancel-today-btn { flex:1 1 0; padding:0 12px; }
+  .App .quest-dashboard .remove-btn { flex:0 0 44px; width:44px; padding:0; }
   .App .quest-dashboard .quest-progress { margin-bottom: 0; }
   .App .add-quest { gap: 8px; padding: 16px; }
   .App .add-quest input { min-height: 44px; margin: 0 0 8px; font-size: 16px; }

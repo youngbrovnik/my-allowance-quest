@@ -103,6 +103,14 @@ export const periodStats = data => {
     spent: data.totalSpent ?? data.spent ?? 0,
   };
 };
+
+export const monthlyMaxReward = (quests = []) => (Array.isArray(quests) ? quests : []).reduce((total, quest) => {
+  const frequency = nonNegativeInteger(quest?.frequency);
+  const rewardAmount = validMoney(quest?.rewardAmount) ? Number(quest.rewardAmount) : 0;
+  const reward = frequency * rewardAmount;
+  return Number.isSafeInteger(reward) && Number.isSafeInteger(total + reward) ? total + reward : total;
+}, 0);
+
 export const makeEntry = (type, amount, name, extra = {}) => ({
   id: newRewardId(), type, amount, name, date: getQuestDay(), createdAt: new Date().toISOString(), ...extra,
 });
