@@ -8,16 +8,21 @@
 .reward-wallet, .reward-entries, .reward-month { padding:24px; border:1px solid var(--border-secondary); border-radius:18px; background:var(--bg-card); }
 .reward-wallet h2 { font-size:38px; margin:10px 0; letter-spacing:-.04em; overflow-wrap:anywhere; }
 .reward-wallet h2 small { font-size:18px; margin-left:6px; }
-.reward-wallet h2 .monthly-reward-maximum { color:var(--text-secondary); font-size:16px; font-weight:500; letter-spacing:0; }
 .reward-eyebrow { font-size:12px; color:var(--text-secondary); margin:0; }
 .reward-muted { font-size:13px; color:var(--text-secondary); line-height:1.7; }
-.reward-totals { display:grid; gap:12px; border-bottom:1px solid var(--border-primary); padding:16px 0 22px; }
-.reward-totals div { display:flex; justify-content:space-between; gap:10px; }
-.reward-totals dd { margin:0; font-weight:700; }
-.monthly-reward-progress { padding:14px 0 8px; }
+.reward-balance-summary { padding-bottom:22px; border-bottom:1px solid var(--border-primary); }
+.reward-balance-breakdown { display:grid; gap:10px; margin:20px 0 0; }
+.reward-balance-breakdown div { display:flex; justify-content:space-between; gap:12px; }
+.reward-balance-breakdown dt { color:var(--text-secondary); }
+.reward-balance-breakdown dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
+.monthly-reward-progress { padding:22px 0; border-bottom:1px solid var(--border-primary); }
 .monthly-reward-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .monthly-reward-heading strong { font-size:14px; }
+.monthly-reward-amount { margin:12px 0 2px; font-variant-numeric:tabular-nums; }
+.monthly-reward-amount strong { font-size:24px; }
+.monthly-reward-amount span { color:var(--text-secondary); font-size:14px; }
 .monthly-reward-progress progress { display:block; width:100%; height:10px; margin-top:12px; accent-color:#3c8660; }
+.reward-goal { padding-top:22px; }
 .reward-goal h3 { margin:10px 0; font-size:20px; overflow-wrap:anywhere; }
 .reward-goal p { font-size:13px; line-height:1.6; }
 .reward-goal progress, .reward-quest-summary progress { width:100%; height:10px; accent-color:#3c8660; }
@@ -64,4 +69,4 @@
 .reward-quest-summary progress { grid-column:1/-1; }
 .reward-action-error { width:100%; font-size:14px; padding:16px; border:1px solid #b66948; border-radius:8px; }
 @media (max-width:1024px) { .reward-wallet { margin-bottom:24px; } .App .reward-dashboard .dashboard-sidebar { position:static; } }
-@media (max-width:600px) { .App .reward-main > .quest-list, .reward-wallet, .reward-entries, .reward-month { padding:18px; } .reward-wallet button, .reward-inline-form button { min-height:44px; } .reward-dashboard-heading h2 { font-size:24px; } .reward-form input, .reward-inline-form input { font-size:16px; } .reward-entry-amount { max-width:46%; } }
+@media (max-width:600px) { .App .reward-main > .quest-list, .reward-wallet, .reward-entries, .reward-month { padding:18px; } .reward-wallet h2 { font-size:34px; } .reward-wallet button, .reward-inline-form button { min-height:44px; } .reward-dashboard-heading h2 { font-size:24px; } .reward-form input, .reward-inline-form input { font-size:16px; } .reward-entry-amount { max-width:46%; } }

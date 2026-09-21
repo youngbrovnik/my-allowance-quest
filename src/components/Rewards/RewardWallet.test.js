@@ -9,8 +9,9 @@ test('이번 달 적립액과 최대 보상금 및 수행률을 표시한다', (
 
   const progress = screen.getByRole('progressbar', { name: '이번 달 보상 수행률' });
   const wallet = progress.closest('.reward-wallet');
-  expect(within(wallet).getByRole('heading', { name: '이번 달 모은 보상 5,000원 / 최대 20,000원' })).toHaveTextContent('5,000원 / 20,000원');
-  expect(within(wallet).getByLabelText('사용 가능한 보상 7,000원')).toBeInTheDocument();
+  expect(within(wallet).getByRole('heading', { name: '사용 가능한 보상 7,000원' })).toBeInTheDocument();
+  expect(within(wallet).getByLabelText('이번 달 보상 현황')).toHaveTextContent('5,000원 / 20,000원');
+  expect(within(wallet).getByText('이월된 금액').closest('div')).toHaveTextContent('2,000원');
   expect(progress).toHaveAttribute('value', '25');
 });
 

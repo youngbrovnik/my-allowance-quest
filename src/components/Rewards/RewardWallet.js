@@ -17,20 +17,25 @@ export default function RewardWallet({ data, setRewardGoal, spendReward }) {
   const progress = goal ? Math.min(100, Math.floor(data.balance / goal.amount * 100)) : 0;
   const maxReward = monthlyMaxReward(data.quests);
   const monthlyProgress = maxReward > 0 ? Math.min(100, Math.floor(data.earned / maxReward * 100)) : 0;
+  const carriedBalance = Math.max(0, data.balance - data.earned + data.spent);
   return <section className="reward-wallet" aria-label="나의 보상">
-    <p className="reward-eyebrow">차곡차곡 모은 나의 보상</p>
-    <h2 aria-label={`이번 달 모은 보상 ${data.earned.toLocaleString()}원 / 최대 ${maxReward.toLocaleString()}원`}>
-      {data.earned.toLocaleString()}<small>원</small>
-      <span className="monthly-reward-maximum"> / {maxReward.toLocaleString()}원</span>
-    </h2>
-    <p className="reward-muted">모은 보상금 / 이번 달 최대 보상금</p>
-    <div className="monthly-reward-progress">
+    <div className="reward-balance-summary">
+      <p className="reward-eyebrow">차곡차곡 모은 나의 보상</p>
+      <h2 aria-label={`사용 가능한 보상 ${data.balance.toLocaleString()}원`}>{data.balance.toLocaleString()}<small>원</small></h2>
+      <p className="reward-muted">사용 가능한 총금액 · 다음 달에도 이어져요</p>
+      <dl className="reward-balance-breakdown">
+        <div><dt>이월된 금액</dt><dd>{carriedBalance.toLocaleString()}원</dd></div>
+        <div><dt>이번 달 적립</dt><dd>+{data.earned.toLocaleString()}원</dd></div>
+        <div><dt>이번 달 사용</dt><dd>−{data.spent.toLocaleString()}원</dd></div>
+      </dl>
+    </div>
+    <div className="monthly-reward-progress" aria-label="이번 달 보상 현황">
       <div className="monthly-reward-heading"><p className="reward-eyebrow">이번 달 보상 수행률</p><strong>{monthlyProgress}%</strong></div>
+      <p className="monthly-reward-amount"><strong>{data.earned.toLocaleString()}원</strong><span> / {maxReward.toLocaleString()}원</span></p>
+      <p className="reward-muted">이번 달 적립 / 이번 달 최대 보상금</p>
       <progress aria-label="이번 달 보상 수행률" max="100" value={monthlyProgress} />
       {maxReward === 0 && <p className="reward-muted">퀘스트를 추가하면 최대 보상금과 수행률이 표시돼요.</p>}
     </div>
-    <p className="reward-muted" aria-label={`사용 가능한 보상 ${data.balance.toLocaleString()}원`}>사용 가능한 잔액 <strong>{data.balance.toLocaleString()}원</strong> · 다음 달에도 이어져요</p>
-    <dl className="reward-totals"><div><dt>이번 달 적립</dt><dd>{data.earned.toLocaleString()}원</dd></div><div><dt>이번 달 사용</dt><dd>{data.spent.toLocaleString()}원</dd></div></dl>
     <div className="reward-goal">
       {goal && !editing ? <>
         <p className="reward-eyebrow">나를 위한 다음 보상</p><h3>{goal.name}</h3>
