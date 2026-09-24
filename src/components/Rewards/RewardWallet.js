@@ -1,14 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { monthlyMaxReward, validMoney } from '../../utils/rewardModel';
 
-export default function RewardWallet({ data, setRewardGoal, spendReward }) {
+export default function RewardWallet({ data, setCarriedBalance, setRewardGoal, spendReward }) {
   const goal = data.rewardGoal;
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(goal?.name || '');
   const [amount, setAmount] = useState(goal?.amount || '');
   const [error, setError] = useState('');
   const [confirmUse, setConfirmUse] = useState(false);
+  const carriedBalance = Math.max(0, data.balance - data.earned + data.spent);
+  const [editingCarry, setEditingCarry] = useState(false);
+  const [carryValue, setCarryValue] = useState(carriedBalance);
+  const [carryError, setCarryError] = useState('');
   useEffect(() => { setName(goal?.name || ''); setAmount(goal?.amount || ''); setConfirmUse(false); }, [goal]);
+  useEffect(() => { if (!editingCarry) setCarryValue(carriedBalance); }, [carriedBalance, editingCarry]);
   const submit = event => {
     event.preventDefault();
     if (!name.trim() || !validMoney(amount)) { setError('보상 이름과 1원~1억 원의 정수 금액을 입력해 주세요.'); return; }
@@ -17,17 +22,28 @@ export default function RewardWallet({ data, setRewardGoal, spendReward }) {
   const progress = goal ? Math.min(100, Math.floor(data.balance / goal.amount * 100)) : 0;
   const maxReward = monthlyMaxReward(data.quests);
   const monthlyProgress = maxReward > 0 ? Math.min(100, Math.floor(data.earned / maxReward * 100)) : 0;
-  const carriedBalance = Math.max(0, data.balance - data.earned + data.spent);
+  const submitCarry = event => {
+    event.preventDefault();
+    if (setCarriedBalance(carryValue)) { setEditingCarry(false); setCarryError(''); }
+    else setCarryError('이월 금액을 확인해 주세요.');
+  };
   return <section className="reward-wallet" aria-label="나의 보상">
     <div className="reward-balance-summary">
       <p className="reward-eyebrow">차곡차곡 모은 나의 보상</p>
       <h2 aria-label={`사용 가능한 보상 ${data.balance.toLocaleString()}원`}>{data.balance.toLocaleString()}<small>원</small></h2>
       <p className="reward-muted">사용 가능한 총금액 · 다음 달에도 이어져요</p>
       <dl className="reward-balance-breakdown">
-        <div><dt>이월된 금액</dt><dd>{carriedBalance.toLocaleString()}원</dd></div>
+        <div><dt>이월된 금액</dt><dd>{carriedBalance.toLocaleString()}원 <button type="button" className="reward-text-button" onClick={() => { setCarryValue(carriedBalance); setCarryError(''); setEditingCarry(true); }}>수정</button></dd></div>
         <div><dt>이번 달 적립</dt><dd>+{data.earned.toLocaleString()}원</dd></div>
         <div><dt>이번 달 사용</dt><dd>−{data.spent.toLocaleString()}원</dd></div>
       </dl>
+      {editingCarry && <form className="carried-balance-form" onSubmit={submitCarry}>
+        <label htmlFor="carried-balance">이월 금액 (원)</label>
+        <div><input id="carried-balance" type="number" min="0" max="100000000" step="1" value={carryValue} onChange={event => { setCarryValue(event.target.value); setCarryError(''); }} /><button className="reward-primary" type="submit">저장</button></div>
+        <p>이번 달 적립과 사용 내역은 그대로 유지됩니다.</p>
+        {carryError && <p role="alert">{carryError}</p>}
+        <button type="button" onClick={() => { setEditingCarry(false); setCarryError(''); }}>취소</button>
+      </form>}
     </div>
     <div className="monthly-reward-progress" aria-label="이번 달 보상 현황">
       <div className="monthly-reward-heading"><p className="reward-eyebrow">이번 달 보상 수행률</p><strong>{monthlyProgress}%</strong></div>

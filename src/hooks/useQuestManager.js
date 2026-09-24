@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { getQuestDay } from '../utils/questDate';
 import { isValidQuestFrequency } from '../utils/inputValidation';
-import { activeEntries, makeEntry, newRewardId, normalizeRewardData, validMoney } from '../utils/rewardModel';
+import { activeEntries, makeEntry, newRewardId, normalizeRewardData, validCarriedBalance, validMoney } from '../utils/rewardModel';
 
 export const useQuestManager = (saveDataToFirestore) => {
   const [data, setData] = useState(() => normalizeRewardData());
@@ -77,6 +77,19 @@ export const useQuestManager = (saveDataToFirestore) => {
     if (!name.trim() || !validMoney(amount)) return false;
     return commit({ ...current.current, rewardGoal: { name: name.trim(), amount: Number(amount) } });
   };
+  const setCarriedBalance = value => {
+    if (!validCarriedBalance(value)) {
+      setActionError('이월 금액은 0원~1억 원의 정수로 입력해 주세요.');
+      return false;
+    }
+    const state = current.current;
+    const balance = Number(value) + state.earned - state.spent;
+    if (balance < 0) {
+      setActionError(`이번 달 사용 금액을 반영하려면 이월 금액이 최소 ${(state.spent - state.earned).toLocaleString()}원이어야 합니다.`);
+      return false;
+    }
+    return commit({ ...state, balance });
+  };
   const spendReward = () => {
     const state = current.current;
     const goal = state.rewardGoal;
@@ -93,5 +106,5 @@ export const useQuestManager = (saveDataToFirestore) => {
       rewardGoal: state.rewardGoal || entry.rewardGoal || { name: entry.name, amount: -entry.amount },
       entries: [...state.entries, makeEntry('refund', -entry.amount, entry.name, { reverses: entry.id })] });
   };
-  return { data, quests: data.quests, earned: data.earned, actionError, loadData, addQuest, updateQuestReward, removeQuest, toggleQuestComplete, reorderQuests, setRewardGoal, spendReward, undoSpend };
+  return { data, quests: data.quests, earned: data.earned, actionError, loadData, addQuest, updateQuestReward, removeQuest, toggleQuestComplete, reorderQuests, setCarriedBalance, setRewardGoal, spendReward, undoSpend };
 };

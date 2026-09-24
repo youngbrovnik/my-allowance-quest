@@ -15,6 +15,12 @@
 .reward-balance-breakdown div { display:flex; justify-content:space-between; gap:12px; }
 .reward-balance-breakdown dt { color:var(--text-secondary); }
 .reward-balance-breakdown dd { margin:0; font-weight:700; font-variant-numeric:tabular-nums; }
+.reward-wallet .reward-text-button { min-height:0; margin-left:6px; padding:3px 7px; border:0; background:transparent; color:var(--text-secondary); text-decoration:underline; font-size:11px; }
+.carried-balance-form { margin-top:16px; padding:14px; border:1px solid var(--border-secondary); border-radius:10px; background:var(--bg-input); }
+.carried-balance-form label { display:block; margin-bottom:8px; font-size:13px; font-weight:600; }
+.carried-balance-form > div { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.carried-balance-form input { width:100%; min-width:0; padding:10px; border:1px solid var(--border-secondary); border-radius:8px; background:var(--bg-card); color:var(--text-primary); font:inherit; }
+.carried-balance-form p { margin:10px 0; color:var(--text-secondary); font-size:12px; line-height:1.6; }
 .monthly-reward-progress { padding:22px 0; border-bottom:1px solid var(--border-primary); }
 .monthly-reward-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .monthly-reward-heading strong { font-size:14px; }
@@ -69,4 +75,4 @@
 .reward-quest-summary progress { grid-column:1/-1; }
 .reward-action-error { width:100%; font-size:14px; padding:16px; border:1px solid #b66948; border-radius:8px; }
 @media (max-width:1024px) { .reward-wallet { margin-bottom:24px; } .App .reward-dashboard .dashboard-sidebar { position:static; } }
-@media (max-width:600px) { .App .reward-main > .quest-list, .reward-wallet, .reward-entries, .reward-month { padding:18px; } .reward-wallet h2 { font-size:34px; } .reward-wallet button, .reward-inline-form button { min-height:44px; } .reward-dashboard-heading h2 { font-size:24px; } .reward-form input, .reward-inline-form input { font-size:16px; } .reward-entry-amount { max-width:46%; } }
+@media (max-width:600px) { .App .reward-main > .quest-list, .reward-wallet, .reward-entries, .reward-month { padding:18px; } .reward-wallet h2 { font-size:34px; } .reward-wallet button:not(.reward-text-button), .reward-inline-form button { min-height:44px; } .reward-dashboard-heading h2 { font-size:24px; } .reward-form input, .reward-inline-form input, .carried-balance-form input { font-size:16px; } .reward-entry-amount { max-width:46%; } }

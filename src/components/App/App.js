@@ -330,6 +330,7 @@ function AppContent() {
               <Dashboard
                 data={questManager.data}
                 disabled={saveConflict}
+                setCarriedBalance={(...args) => canEdit() && questManager.setCarriedBalance(...args)}
                 setRewardGoal={(...args) => canEdit() && questManager.setRewardGoal(...args)}
                 spendReward={() => canEdit() && questManager.spendReward()}
                 undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)}

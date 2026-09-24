@@ -3,6 +3,7 @@ import { MAX_QUEST_FREQUENCY } from './inputValidation';
 
 export const newRewardId = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const validMoney = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isSafeInteger(Number(value)) && Number(value) > 0 && Number(value) <= 100000000;
+export const validCarriedBalance = value => (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) && Number.isSafeInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 100000000;
 export const activeEntries = (entries = []) => {
   const reversed = new Set(entries.filter(e => e.reverses).map(e => e.reverses));
   return entries.filter(e => !e.reverses && !reversed.has(e.id));
