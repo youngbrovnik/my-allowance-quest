@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { getQuestDay } from '../utils/questDate';
+import { getQuestDay, getQuestMonth } from '../utils/questDate';
 import { isValidQuestFrequency } from '../utils/inputValidation';
 import { activeEntries, makeEntry, newRewardId, normalizeRewardData, validCarriedBalance, validMoney } from '../utils/rewardModel';
 
@@ -32,25 +32,34 @@ export const useQuestManager = (saveDataToFirestore) => {
     const state = current.current;
     return commit({ ...state, quests: [...state.quests, { id: newRewardId(), name: name.trim(), frequency: Number(frequency), rewardAmount: Number(rewardAmount), completedTimes: 0, completed: false, lastCompletedDate: null }] });
   };
-  const updateQuestReward = (id, value) => {
-    if (!validMoney(value)) return false;
+  const updateQuestReward = (id, value, frequency) => {
+    const quest = current.current.quests.find(q => q.id === id);
+    if (!quest) return false;
+    const nextFrequency = frequency ?? quest.frequency;
+    if (!validMoney(value) || !isValidQuestFrequency(nextFrequency)) return false;
     const state = current.current;
-    return commit({ ...state, quests: state.quests.map(q => q.id === id ? { ...q, rewardAmount: Number(value) } : q) });
+    return commit({ ...state, quests: state.quests.map(q => q.id === id ? { ...q, rewardAmount: Number(value), frequency: Number(nextFrequency), completed: q.completedTimes >= Number(nextFrequency) } : q) });
   };
   // 삭제는 향후 할 일만 없애며, 이미 쌓인 보상과 완료 내역은 남깁니다.
   const removeQuest = id => {
     const state = current.current;
     return commit({ ...state, quests: state.quests.filter(q => q.id !== id) });
   };
-  const toggleQuestComplete = (id, action = 'complete') => {
+  const toggleQuestComplete = (id, action = 'complete', selectedDate = getQuestDay()) => {
     const state = current.current;
     const quest = state.quests.find(q => q.id === id);
     if (!quest || !['complete', 'cancel'].includes(action)) return false;
     const today = getQuestDay();
-    const doneToday = quest.lastCompletedDate === today;
+    const parsedDate = new Date(`${selectedDate}T00:00:00Z`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(selectedDate) || Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== selectedDate || selectedDate > today || selectedDate.slice(0, 7) !== getQuestMonth()) {
+      setActionError('이번 달의 오늘까지 날짜만 기록할 수 있어요.');
+      return false;
+    }
+    const questEntries = activeEntries(state.entries).filter(e => e.type === 'earn' && e.questId === id);
+    const doneOnDate = questEntries.some(e => e.date === selectedDate) || (!questEntries.length && quest.lastCompletedDate === selectedDate);
     const cancel = action === 'cancel';
-    if (cancel ? !doneToday : doneToday || quest.completedTimes >= quest.frequency) return false;
-    const original = activeEntries(state.entries).find(e => e.type === 'earn' && e.questId === id && e.date === today);
+    if (cancel ? !doneOnDate : doneOnDate || quest.completedTimes >= quest.frequency) return false;
+    const original = activeEntries(state.entries).find(e => e.type === 'earn' && e.questId === id && e.date === selectedDate);
     if (cancel && !original) {
       setActionError('이전 방식으로 작성된 기록은 적립 당시 금액을 확인할 수 없어 취소할 수 없습니다.');
       return false;
@@ -61,8 +70,8 @@ export const useQuestManager = (saveDataToFirestore) => {
     const completedTimes = quest.completedTimes + (cancel ? -1 : 1);
     return commit({
       ...state, balance: state.balance + delta, earned: state.earned + delta,
-      quests: state.quests.map(q => q.id === id ? { ...q, completedTimes, completed: completedTimes >= q.frequency, lastCompletedDate: cancel ? null : today } : q),
-      entries: [...state.entries, makeEntry(cancel ? 'cancel' : 'earn', delta, quest.name, { questId: id, ...(cancel ? { reverses: original.id } : {}) })],
+      quests: state.quests.map(q => q.id === id ? { ...q, completedTimes, completed: completedTimes >= q.frequency, lastCompletedDate: cancel ? null : selectedDate } : q),
+      entries: [...state.entries, makeEntry(cancel ? 'cancel' : 'earn', delta, quest.name, { questId: id, date: selectedDate, ...(cancel ? { reverses: original.id } : {}) })],
     });
   };
   const reorderQuests = (start, end) => {

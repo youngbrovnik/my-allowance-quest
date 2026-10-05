@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { validMoney } from "../../utils/rewardModel";
 import { useQuestDay } from "../../hooks/useQuestDay";
@@ -6,14 +6,22 @@ import Quest from "./Quest";
 import "./Quest.css";
 import { MAX_QUEST_FREQUENCY, isValidQuestFrequency } from "../../utils/inputValidation";
 
-function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuests, updateQuestReward }) {
+function QuestList({ quests, entries = [], addQuest, removeQuest, toggleComplete, reorderQuests, updateQuestReward }) {
   const today = useQuestDay();
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const [selectedDate, setSelectedDate] = useState(today);
   const [questName, setQuestName] = useState("");
   const [questFrequency, setQuestFrequency] = useState(1);
 
   const [rewardAmount, setRewardAmount] = useState(1000);
 
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setSelectedDate(previous => previous < monthStart || previous > today ? today : previous);
+  }, [monthStart, today]);
+  const isToday = selectedDate === today;
+
 
   const handleAddQuest = () => {
     if (!questName.trim()) return;
@@ -55,7 +63,14 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
       <p className="desktop-only quest-list-description">완료한 활동을 체크해 주세요. 순서는 드래그해서 바꿀 수 있어요.</p>
       {quests.length === 0 && <p className="desktop-only quest-empty">아직 등록된 퀘스트가 없어요. 첫 목표를 추가해 보세요.</p>}
 
-      <p className="quest-daily-help">퀘스트마다 하루 한 번 완료할 수 있어요. 한국 시간 자정에 다시 시작하며, 오늘 기록만 취소할 수 있어요.</p>
+      <section className="quest-date-picker" aria-label="기록할 날짜 선택">
+        <div className="quest-date-controls">
+          <label>날짜 선택<input type="date" value={selectedDate} min={monthStart} max={today} onChange={event => setSelectedDate(event.target.value || today)} /></label>
+          {!isToday && <button type="button" className="quest-today-button" onClick={() => setSelectedDate(today)}>오늘로</button>}
+        </div>
+      </section>
+
+      <p className="quest-daily-help">퀘스트마다 날짜별로 한 번 완료할 수 있어요. 이번 달의 오늘까지 기록하거나 취소할 수 있습니다.</p>
 
       {/* 퀘스트 목록 */}
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -73,6 +88,8 @@ function QuestList({ quests, addQuest, removeQuest, toggleComplete, reorderQuest
                     >
                       <Quest
                         today={today}
+                        selectedDate={selectedDate}
+                        entries={entries}
                         index={index}
                         quest={quest}
                         toggleComplete={toggleComplete}

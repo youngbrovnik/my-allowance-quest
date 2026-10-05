@@ -14,15 +14,16 @@ afterEach(() => jest.useRealTimers());
 test('오늘 완료 상태에서는 추가 완료를 막고 취소 동작을 분리한다', () => {
   const action = jest.fn();
   render(<LiveQuest quest={quest} toggleComplete={action} />);
-  expect(screen.getByRole('button', { name: '오늘 완료했어요 ✓' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: '오늘 기록 취소' }));
-  expect(action).toHaveBeenCalledWith('exercise', 'cancel');
+  expect(screen.getByRole('button', { name: '완료 ✓' })).toHaveClass('is-done');
+  expect(screen.getByRole('button', { name: '완료 ✓' })).toHaveAttribute('title', '2026-09-20 완료 기록 취소');
+  fireEvent.click(screen.getByRole('button', { name: '완료 ✓' }));
+  expect(action).toHaveBeenCalledWith('exercise', 'cancel', '2026-09-20');
 });
 
 test('화면을 열어둔 채 한국 자정을 지나면 오늘 완료가 활성화된다', () => {
   render(<LiveQuest quest={quest} toggleComplete={jest.fn()} />);
   act(() => { jest.advanceTimersByTime(1000); });
-  expect(screen.getByRole('button', { name: '오늘 완료' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '완료' })).toHaveAttribute('title', '2026-09-21 완료 기록 추가');
   expect(screen.queryByRole('button', { name: '오늘 기록 취소' })).not.toBeInTheDocument();
 });
 
@@ -30,11 +31,29 @@ test('절전 후 돌아와도 새 날짜를 반영한다', () => {
   render(<LiveQuest quest={quest} toggleComplete={jest.fn()} />);
   jest.setSystemTime(new Date('2026-09-21T01:00:00Z'));
   fireEvent.focus(window);
-  expect(screen.getByRole('button', { name: '오늘 완료' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '완료' })).toBeEnabled();
 });
 
 test('월 목표를 달성했으면 다음 날에도 추가 적립을 막는다', () => {
   render(<LiveQuest quest={{ ...quest, completedTimes: 12, completed: true }} toggleComplete={jest.fn()} />);
   act(() => { jest.advanceTimersByTime(1000); });
   expect(screen.getByRole('button', { name: '이번 달 목표 달성' })).toBeDisabled();
+});
+
+test('선택한 지난 날짜의 완료 내역을 표시하고 취소 날짜를 전달한다', () => {
+  const action = jest.fn();
+  render(<Quest quest={quest} entries={[{ id: 'entry', type: 'earn', questId: 'exercise', date: '2026-09-03', amount: 3000 }]} selectedDate="2026-09-03" today="2026-09-20" toggleComplete={action} removeQuest={() => {}} updateQuestReward={() => {}} />);
+  fireEvent.click(screen.getByRole('button', { name: '완료 ✓' }));
+  expect(action).toHaveBeenCalledWith('exercise', 'cancel', '2026-09-03');
+});
+
+test('목표와 보상 수정 폼에서 횟수와 금액을 함께 저장한다', () => {
+  const update = jest.fn(() => true);
+  render(<Quest quest={quest} entries={[]} toggleComplete={jest.fn()} removeQuest={() => {}} updateQuestReward={update} />);
+  expect(screen.getByRole('button', { name: '운동 수정' })).toHaveAttribute('title', '월 목표 횟수와 1회 완료 보상을 수정합니다.');
+  fireEvent.click(screen.getByRole('button', { name: '운동 수정' }));
+  fireEvent.change(screen.getByLabelText('월 목표 횟수'), { target: { value: '15' } });
+  fireEvent.change(screen.getByLabelText('1회 완료 보상 (원)'), { target: { value: '5000' } });
+  fireEvent.click(screen.getByRole('button', { name: '저장' }));
+  expect(update).toHaveBeenCalledWith('exercise', '5000', '15');
 });

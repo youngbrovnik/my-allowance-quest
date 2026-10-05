@@ -43,8 +43,7 @@
     border-radius:10px;
   }
   .App .quest-dashboard .complete-btn,
-  .App .quest-dashboard .reward-small-button,
-  .App .quest-dashboard .cancel-today-btn { flex:1 1 0; padding:0 12px; }
+  .App .quest-dashboard .reward-small-button { flex:1 1 0; padding:0 12px; }
   .App .quest-dashboard .remove-btn { flex:0 0 44px; width:44px; padding:0; }
   .App .quest-dashboard .quest-progress { margin-bottom: 0; }
   .App .add-quest { gap: 8px; padding: 16px; }

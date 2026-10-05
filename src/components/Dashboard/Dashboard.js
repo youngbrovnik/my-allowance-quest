@@ -16,7 +16,7 @@ export default function Dashboard({ data, disabled, actionError, setCarriedBalan
       <div className="dashboard-sidebar"><RewardWallet data={data} setCarriedBalance={setCarriedBalance} setRewardGoal={setRewardGoal} spendReward={spendReward} /></div>
       <div className="reward-main">
         <div className="reward-metrics"><div><span>이번 달 실천</span><strong>{stats.completedCount}회</strong></div><div><span>{stats.hasUnknownDays ? '새 기록의 실천일' : '실천한 날짜'}</span><strong>{stats.activeDays}일</strong></div></div>
-        <QuestList quests={data.quests} addQuest={addQuest} removeQuest={removeQuest} toggleComplete={toggleComplete} reorderQuests={reorderQuests} updateQuestReward={updateQuestReward} />
+        <QuestList quests={data.quests} entries={data.entries} addQuest={addQuest} removeQuest={removeQuest} toggleComplete={toggleComplete} reorderQuests={reorderQuests} updateQuestReward={updateQuestReward} />
         <RewardEntries entries={data.entries} undoSpend={undoSpend} />
       </div>
     </fieldset>

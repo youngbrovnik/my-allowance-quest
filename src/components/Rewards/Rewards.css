@@ -56,6 +56,8 @@
 .reward-inline-form { margin:16px 0; padding:14px; border:1px solid var(--border-secondary); border-radius:10px; }
 .reward-inline-form p { font-size:12px; }
 .reward-inline-form button { margin-right:8px; }
+.reward-inline-actions { display:flex; align-items:center; gap:8px; }
+.reward-inline-actions button { margin-right:0; }
 .reward-entries { margin-top:22px; }
 .reward-entries h3 { font-size:18px; margin:0 0 16px; }
 .reward-entries ul { padding:0; margin:0; list-style:none; }

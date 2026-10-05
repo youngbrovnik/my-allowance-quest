@@ -114,6 +114,10 @@
   box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
 }
 
+.complete-btn.is-done {
+  background: #258A2E;
+}
+
 .complete-btn.completed {
   background: linear-gradient(45deg, #9e9e9e, #bdbdbd);
   cursor: not-allowed;
@@ -365,10 +369,15 @@
 }
 
 .quest-daily-help { font-size: .85rem; color: var(--text-secondary); line-height: 1.7; }
+.quest-date-picker { margin: 18px 0 14px; padding: 16px; border: 1px solid var(--border-secondary); border-radius: 14px; background: var(--bg-card); }
+.quest-date-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: end; }
+.quest-date-controls label { display: flex; width: 220px; max-width: 100%; flex-direction: column; align-items: center; gap: 8px; color: var(--text-primary); font-size: .95rem; font-weight: 600; }
+.quest-date-controls input { box-sizing: border-box; width: 220px; max-width: 100%; height: 48px; border: 1px solid var(--border-input); border-radius: 10px; padding: 0 12px; background: var(--bg-input); color: var(--text-primary); font: inherit; font-size: 1.05rem; font-weight: 600; text-align: center; color-scheme: light dark; }
+.quest-today-button { height: 44px; border: 1px solid var(--border-secondary); border-radius: 10px; padding: 0 14px; background: var(--bg-tertiary); color: var(--text-primary); font: inherit; font-size: .85rem; cursor: pointer; }
+.quest-date-picker button:focus-visible, .quest-date-picker input:focus-visible { outline: 2px solid #458568; outline-offset: 2px; }
 .quest-card .quest-actions { flex-wrap: wrap; }
-.quest-card .cancel-today-btn { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-secondary); border-radius: 8px; padding: 9px 12px; cursor: pointer; font-size: .8rem; }
-.quest-card .cancel-today-btn:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 @media (max-width: 600px) {
+  .quest-date-picker { margin-top: 14px; padding: 14px; }
   .quest-card .quest-header { flex-wrap: wrap; }
   .quest-card .quest-actions { width: 100%; justify-content: flex-end; }
 }

@@ -454,13 +454,13 @@ test('기존 기록에 오늘 완료·취소를 적용하고 재로그인해도 
   saveUserData.mockImplementation(async (_, data) => { server = data; return true; });
   render(<App />);
   await login();
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '오늘 완료', exact: true })); });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '완료', exact: true })); });
   expect(screen.getByLabelText('사용 가능한 보상 2,000원')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: '오늘 완료했어요 ✓' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '완료 ✓' })).toBeInTheDocument();
   await login(null);
   await login();
-  expect(screen.getByRole('button', { name: '오늘 완료했어요 ✓' })).toBeDisabled();
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '오늘 기록 취소' })); });
+  expect(screen.getByRole('button', { name: '완료 ✓' })).toBeInTheDocument();
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '완료 ✓' })); });
   expect(screen.getByLabelText('사용 가능한 보상 1,000원')).toBeInTheDocument();
   expect(server.quests[0].completedTimes).toBe(1);
 });
@@ -472,7 +472,7 @@ test('고정 보상 적립 후 목표 사용과 사용 취소가 잔액에 반�
   fireEvent.change(screen.getByLabelText('월 퀘스트 횟수'), { target: { value: '12' } });
   fireEvent.change(screen.getByLabelText('1회 완료 보상 (원)'), { target: { value: '3000' } });
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '퀘스트 추가' })));
-  await act(async () => fireEvent.click(screen.getByRole('button', { name: '오늘 완료' })));
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: '완료' })));
   await editGoal('2000');
   fireEvent.click(screen.getByRole('button', { name: '보상 사용 기록' }));
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '사용했어요' })));
