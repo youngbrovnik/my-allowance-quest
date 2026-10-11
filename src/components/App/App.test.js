@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { loadUserData, saveUserData, rolloverMonthlyData } from '../../services/firestoreService';
+import { loadUserData, saveUserData, rolloverMonthlyData, subscribeUserData } from '../../services/firestoreService';
 import App from './App';
 
 jest.mock('../../config/firebase', () => ({ auth: {} }));
@@ -14,9 +14,11 @@ jest.mock('../../services/firestoreService', () => ({
   loadUserData: jest.fn(),
   saveUserData: jest.fn(),
   rolloverMonthlyData: jest.fn(),
+  subscribeUserData: jest.fn(),
 }));
 
 let authChanged;
+let remoteChanged;
 const user = { uid: 'user-a', email: 'a@example.com' };
 const storedData = () => ({
   allowance: 12000,
@@ -39,6 +41,74 @@ beforeEach(() => {
     return jest.fn();
   });
   saveUserData.mockResolvedValue(true);
+  subscribeUserData.mockImplementation((_, onData) => {
+    remoteChanged = onData;
+    return jest.fn();
+  });
+});
+
+test('다른 단말에서 저장한 최신 데이터를 실시간으로 반영한다', async () => {
+  const initial = { ...storedData(), revision: 1 };
+  loadUserData.mockResolvedValueOnce(initial);
+  render(<App />);
+  await login();
+  expect(subscribeUserData).toHaveBeenCalledWith(user.uid, expect.any(Function), expect.any(Function));
+  await act(async () => {
+    remoteChanged({ ...initial, revision: 2, balance: 7000, earned: 7000, lastUpdated: new Date(Date.now() + 1000).toISOString() });
+  });
+  expect(screen.getByLabelText('사용 가능한 보상 7,000원')).toBeInTheDocument();
+  expect(saveUserData).not.toHaveBeenCalled();
+});
+
+test('미저장 변경이 있으면 다른 단말의 실시간 데이터를 덮어쓰지 않는다', async () => {
+  const initial = { ...storedData(), revision: 1 };
+  loadUserData.mockResolvedValueOnce(initial);
+  saveUserData.mockResolvedValueOnce(false);
+  render(<App />);
+  await login();
+  await editGoal('15000');
+  await act(async () => {
+    remoteChanged({ ...initial, revision: 2, rewardGoal: { name: '운동화', amount: 22000 }, lastUpdated: new Date(Date.now() + 1000).toISOString() });
+  });
+  expect(screen.getByText('목표 금액: 15,000원')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '다시 저장' })).toBeInTheDocument();
+});
+
+test('실시간 갱신 중 보상 목표에 입력하던 값을 보존한다', async () => {
+  const initial = { ...storedData(), revision: 1 };
+  loadUserData.mockResolvedValueOnce(initial);
+  render(<App />); await login();
+  fireEvent.click(screen.getByRole('button', { name: '보상 목표 수정' }));
+  fireEvent.change(screen.getByLabelText('보상 이름'), { target: { value: '입력 중인 목표' } });
+  await act(async () => remoteChanged({ ...initial, revision: 2, rewardGoal: { name: '새 목표', amount: 22000 } }));
+  expect(screen.getByLabelText('보상 이름')).toHaveValue('입력 중인 목표');
+});
+
+test('저장 중 도착한 원격 변경은 저장이 끝난 후 서버에서 재확인한다', async () => {
+  const initial = { ...storedData(), revision: 1 };
+  const remote = { ...initial, revision: 3, balance: 9000 };
+  let finish;
+  loadUserData.mockResolvedValueOnce(initial).mockResolvedValueOnce(remote);
+  saveUserData.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+  render(<App />); await login(); await editGoal('15000');
+  await act(async () => remoteChanged(remote));
+  expect(screen.getByLabelText('사용 가능한 보상 3,000원')).toBeInTheDocument();
+  await act(async () => finish(true));
+  expect(loadUserData).toHaveBeenLastCalledWith(user.uid, true);
+  expect(screen.getByLabelText('사용 가능한 보상 9,000원')).toBeInTheDocument();
+});
+
+test('연결 복구 시 서버를 확인하고 로그아웃 이후의 구독 응답은 무시한다', async () => {
+  const initial = { ...storedData(), revision: 1 };
+  loadUserData.mockResolvedValueOnce(initial).mockResolvedValueOnce({ ...initial, revision: 2, balance: 8000 });
+  render(<App />); await login();
+  const oldCallback = remoteChanged;
+  await act(async () => window.dispatchEvent(new Event('online')));
+  expect(loadUserData).toHaveBeenLastCalledWith(user.uid, true);
+  expect(screen.getByLabelText('사용 가능한 보상 8,000원')).toBeInTheDocument();
+  await login(null);
+  await act(async () => oldCallback({ ...initial, revision: 3, balance: 10000 }));
+  expect(screen.queryByLabelText('사용 가능한 보상 10,000원')).not.toBeInTheDocument();
 });
 
 async function login(account = user) {

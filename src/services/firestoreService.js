@@ -4,14 +4,31 @@ import { db } from "../config/firebase";
 import {
   doc,
   getDoc,
+  getDocFromServer,
   updateDoc,
   collection,
   query,
   where,
   getDocs,
   getDocsFromServer,
+  onSnapshot,
   runTransaction,
 } from "firebase/firestore";
+
+// 다른 단말에서 저장한 사용자 데이터를 실시간으로 수신합니다.
+export const subscribeUserData = (userId, onData, onError) => {
+  if (!userId) throw new Error("사용자 ID가 필요합니다.");
+  const userRef = doc(db, "users", userId);
+  return onSnapshot(
+    userRef,
+    (snapshot) => {
+      if (!snapshot.metadata?.hasPendingWrites && !snapshot.metadata?.fromCache) {
+        onData(snapshot.exists() ? snapshot.data() : null);
+      }
+    },
+    onError,
+  );
+};
 
 // 사용자 데이터를 Firestore에 저장
 export const saveUserData = async (userId, userData, baseData) => {
@@ -44,10 +61,10 @@ export const saveUserData = async (userId, userData, baseData) => {
 };
 
 // 사용자 데이터를 Firestore에서 불러오기
-export const loadUserData = async (userId) => {
+export const loadUserData = async (userId, fromServer = false) => {
   try {
     const userRef = doc(db, "users", userId);
-    const userSnap = await getDoc(userRef);
+    const userSnap = await (fromServer ? getDocFromServer(userRef) : getDoc(userRef));
 
     if (userSnap.exists()) {
       return userSnap.data();

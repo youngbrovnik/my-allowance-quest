@@ -12,7 +12,10 @@ export default function RewardWallet({ data, setCarriedBalance, setRewardGoal, s
   const [editingCarry, setEditingCarry] = useState(false);
   const [carryValue, setCarryValue] = useState(carriedBalance);
   const [carryError, setCarryError] = useState('');
-  useEffect(() => { setName(goal?.name || ''); setAmount(goal?.amount || ''); setConfirmUse(false); }, [goal]);
+  useEffect(() => {
+    if (!editing) { setName(goal?.name || ''); setAmount(goal?.amount || ''); }
+    setConfirmUse(false);
+  }, [goal, editing]);
   useEffect(() => { if (!editingCarry) setCarryValue(carriedBalance); }, [carriedBalance, editingCarry]);
   const submit = event => {
     event.preventDefault();

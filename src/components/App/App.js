@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { auth } from "../../config/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { saveUserData, loadUserData, rolloverMonthlyData } from "../../services/firestoreService";
+import { saveUserData, loadUserData, rolloverMonthlyData, subscribeUserData } from "../../services/firestoreService";
 import { useQuestManager } from "../../hooks/useQuestManager";
 import { ThemeProvider, useTheme } from "../../contexts/ThemeContext";
 import "./App.css";
@@ -248,6 +248,81 @@ function AppContent() {
     }, 60000);
     return () => clearInterval(interval);
   }, [isLoggedIn, dataReady, user, lastUpdated, loadDataForUser]);
+
+  // 다른 단말의 변경을 실시간으로 반영하고, 연결이 복구되거나 탭으로 돌아왔을 때도
+  // 서버 상태를 조용히 확인합니다. 로컬 변경이 있으면 절대 자동으로 덮어쓰지 않습니다.
+  useEffect(() => {
+    if (!isLoggedIn || !dataReady || !user || loadedUserId.current !== user.uid) return undefined;
+    const userId = user.uid;
+    let disposed = false;
+    let checking = false;
+    let lastCheckAt = Date.now();
+
+    const hasLocalWork = () => (
+      unsavedChanges.current.has(userId) ||
+      conflictedUsers.current.has(userId) ||
+      [...pendingSaves.current.values()].some(uid => uid === userId)
+    );
+    const isNewerThanLocal = remote => {
+      const local = savedSnapshots.current.get(userId);
+      if (!local) return Boolean(remote);
+      const remoteRevision = Number(remote?.revision || 0);
+      const localRevision = Number(local?.revision || 0);
+      if (remoteRevision !== localRevision) return remoteRevision > localRevision;
+      return remote?.lastUpdated !== local?.lastUpdated && new Date(remote?.lastUpdated).getTime() > new Date(local?.lastUpdated).getTime();
+    };
+    const applyRemote = remote => {
+      lastCheckAt = Date.now();
+      if (disposed || !remote || loadedUserId.current !== userId || !isNewerThanLocal(remote)) return;
+      if (hasLocalWork()) {
+        const pending = [...pendingSaves.current].filter(([, uid]) => uid === userId).map(([promise]) => promise);
+        if (pending.length) {
+          Promise.allSettled(pending).then(() => {
+            if (!disposed && !hasLocalWork()) checkServer();
+          });
+        }
+        return;
+      }
+      const remoteDate = new Date(remote.lastUpdated);
+      if (Number.isNaN(remoteDate.getTime()) || getQuestMonth(remoteDate) !== getQuestMonth(new Date())) {
+        loadDataForUser(user);
+        return;
+      }
+      savedSnapshots.current.set(userId, remote);
+      setLastUpdated(remoteDate);
+      loadRewardData(remote);
+      setSaveError("");
+      setSaveConflict(false);
+    };
+    const checkServer = async () => {
+      if (checking || disposed || hasLocalWork()) return;
+      checking = true;
+      try {
+        applyRemote(await loadUserData(userId, true));
+      } catch (error) {
+        console.error("동기화 확인 중 오류 발생:", error);
+      } finally {
+        checking = false;
+      }
+    };
+    const unsubscribe = subscribeUserData(userId, applyRemote, error => {
+      console.error("실시간 동기화 중 오류 발생:", error);
+    });
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && Date.now() - lastCheckAt >= 1000) checkServer();
+    };
+    const handleOnline = () => checkServer();
+    const interval = setInterval(checkServer, 5 * 60 * 1000);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      disposed = true;
+      unsubscribe();
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [isLoggedIn, dataReady, user, loadDataForUser, loadRewardData]);
 
   // 페이지 전환 함수
   const navigateToPage = (page) => {
