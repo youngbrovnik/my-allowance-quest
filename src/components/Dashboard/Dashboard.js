@@ -1,12 +1,11 @@
 import React from 'react';
 import QuestList from '../Quest/QuestList';
 import RewardWallet from '../Rewards/RewardWallet';
-import RewardEntries from '../Rewards/RewardEntries';
 import { periodStats } from '../../utils/rewardModel';
 import { QUEST_TIME_ZONE } from '../../utils/questDate';
 import '../Rewards/Rewards.css';
 
-export default function Dashboard({ data, disabled, actionError, setCarriedBalance, setRewardGoal, spendReward, undoSpend, addQuest, removeQuest, toggleComplete, reorderQuests, updateQuestReward }) {
+export default function Dashboard({ data, disabled, actionError, setCarriedBalance, setRewardGoal, spendReward, addQuest, removeQuest, toggleComplete, reorderQuests, updateQuestReward }) {
   const stats = periodStats(data);
   const month = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', timeZone: QUEST_TIME_ZONE });
   return <>
@@ -17,7 +16,6 @@ export default function Dashboard({ data, disabled, actionError, setCarriedBalan
       <div className="reward-main">
         <div className="reward-metrics"><div><span>이번 달 실천</span><strong>{stats.completedCount}회</strong></div><div><span>{stats.hasUnknownDays ? '새 기록의 실천일' : '실천한 날짜'}</span><strong>{stats.activeDays}일</strong></div></div>
         <QuestList quests={data.quests} entries={data.entries} addQuest={addQuest} removeQuest={removeQuest} toggleComplete={toggleComplete} reorderQuests={reorderQuests} updateQuestReward={updateQuestReward} />
-        <RewardEntries entries={data.entries} undoSpend={undoSpend} />
       </div>
     </fieldset>
   </>;

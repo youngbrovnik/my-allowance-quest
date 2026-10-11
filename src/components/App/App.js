@@ -408,7 +408,6 @@ function AppContent() {
                 setCarriedBalance={(...args) => canEdit() && questManager.setCarriedBalance(...args)}
                 setRewardGoal={(...args) => canEdit() && questManager.setRewardGoal(...args)}
                 spendReward={() => canEdit() && questManager.spendReward()}
-                undoSpend={(...args) => canEdit() && questManager.undoSpend(...args)}
                 updateQuestReward={(...args) => canEdit() && questManager.updateQuestReward(...args)}
                 addQuest={(...args) => canEdit() && questManager.addQuest(...args)}
                 removeQuest={(...args) => canEdit() && questManager.removeQuest(...args)}

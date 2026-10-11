@@ -2,6 +2,8 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { onAuthStateChanged } from 'firebase/auth';
 import { loadUserData, saveUserData, rolloverMonthlyData, subscribeUserData } from '../../services/firestoreService';
 import App from './App';
+import { auth } from '../../config/firebase';
+import { loadMonthlyHistory } from '../../services/firestoreService';
 
 jest.mock('../../config/firebase', () => ({ auth: {} }));
 jest.mock('firebase/auth', () => ({
@@ -15,6 +17,7 @@ jest.mock('../../services/firestoreService', () => ({
   saveUserData: jest.fn(),
   rolloverMonthlyData: jest.fn(),
   subscribeUserData: jest.fn(),
+  loadMonthlyHistory: jest.fn(),
 }));
 
 let authChanged;
@@ -41,6 +44,8 @@ beforeEach(() => {
     return jest.fn();
   });
   saveUserData.mockResolvedValue(true);
+  auth.currentUser = null;
+  loadMonthlyHistory.mockResolvedValue([]);
   subscribeUserData.mockImplementation((_, onData) => {
     remoteChanged = onData;
     return jest.fn();
@@ -547,7 +552,12 @@ test('고정 보상 적립 후 목표 사용과 사용 취소가 잔액에 반�
   fireEvent.click(screen.getByRole('button', { name: '보상 사용 기록' }));
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '사용했어요' })));
   expect(screen.getByLabelText('사용 가능한 보상 1,000원')).toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: '적립·사용 내역' })).not.toBeInTheDocument();
+  auth.currentUser = user;
+  fireEvent.click(screen.getByRole('button', { name: '📊 히스토리' }));
+  await screen.findByRole('region', { name: '적립·사용 내역' });
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '사용 기록 취소' })));
-  expect(screen.getByLabelText('사용 가능한 보상 3,000원')).toBeInTheDocument();
   expect(saveUserData).toHaveBeenLastCalledWith(user.uid, expect.objectContaining({ balance: 3000, earned: 3000, spent: 0 }), expect.any(Object));
+  fireEvent.click(screen.getByRole('button', { name: '🎯 퀘스트' }));
+  expect(screen.getByLabelText('사용 가능한 보상 3,000원')).toBeInTheDocument();
 });
